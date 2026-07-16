@@ -1,0 +1,26 @@
+# .NET
+server/**/bin/
+server/**/obj/
+*.dev.db
+*.dev.db-shm
+*.dev.db-wal
+
+# Node / Vite
+client/node_modules/
+client/dist/
+client/.env.local
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.user
+
+# OS
+.DS_Store
+
+# Secrets — never commit real deployment parameters
+infra/main.parameters.json
+
+# Logs
+*.log

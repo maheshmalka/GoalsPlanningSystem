@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/GoalsPlanningSystem.Api/GoalsPlanningSystem.Api.csproj" />
+    <Project Path="src/GoalsPlanningSystem.Domain/GoalsPlanningSystem.Domain.csproj" />
+    <Project Path="src/GoalsPlanningSystem.Infrastructure/GoalsPlanningSystem.Infrastructure.csproj" />
+    <Project Path="src/GoalsPlanningSystem.Simulation/GoalsPlanningSystem.Simulation.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/GoalsPlanningSystem.Tests/GoalsPlanningSystem.Tests.csproj" />
+  </Folder>
+</Solution>
