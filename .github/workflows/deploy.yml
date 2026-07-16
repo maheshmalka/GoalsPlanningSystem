@@ -9,8 +9,8 @@ on:
 env:
   DOTNET_VERSION: "10.0.x"
   NODE_VERSION: "24.x"
-  AZURE_WEBAPP_NAME: "goals-planning-system-api" # update to match infra/main.bicep's apiAppName output
-  AZURE_STATIC_WEB_APP_NAME: "goals-planning-system-client" # update to match infra/main.bicep's staticWebAppName output
+  AZURE_WEBAPP_NAME: "gps-api-v57gvww6eyhsw"
+  AZURE_STATIC_WEB_APP_NAME: "gps-client-v57gvww6eyhsw"
 
 jobs:
   build-test-api:
