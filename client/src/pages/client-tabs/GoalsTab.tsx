@@ -1,21 +1,26 @@
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { z } from "zod";
 import {
   Box, Button, Checkbox, Chip, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel,
-  IconButton, MenuItem, Stack, Switch, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography,
+  IconButton, MenuItem, Stack, Switch, Table, TableBody, TableCell, TableHead, TableRow, Typography,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useAccounts, useGoals } from "../../api/queries";
 import { formatInr } from "../../utils/currency";
-import type { Goal, GoalPriority, GoalType, GoalUpsert } from "../../api/types";
+import { FormTextField } from "../../components/FormTextField";
+import { goalSchema, type GoalFormValues } from "../../validation/schemas";
+import type { Goal } from "../../api/types";
 
-const goalTypes: GoalType[] = [
+const goalTypes = [
   "Retirement", "ChildEducation", "ChildMarriage", "HomePurchase", "VehiclePurchase", "EmergencyFund", "MajorPurchase", "Legacy", "Other",
 ];
-const priorities: GoalPriority[] = ["Essential", "Important", "Aspirational"];
+const priorities = ["Essential", "Important", "Aspirational"];
 
-function emptyForm(): GoalUpsert {
+function defaultValues(): GoalFormValues {
   const year = new Date().getFullYear();
   return { name: "", goalType: "Retirement", targetAmount: 0, priority: "Important", startYear: year + 1, endYear: year + 1, isRecurring: false, growthRateOverridePct: null, linkedAccountIds: [] };
 }
@@ -25,17 +30,23 @@ export default function GoalsTab({ clientId, accountsClientId }: { clientId: num
   const { list: accountsList } = useAccounts(accountsClientId);
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [form, setForm] = useState<GoalUpsert>(emptyForm());
+  const { control, handleSubmit, reset, watch, setValue } = useForm<z.input<typeof goalSchema>, any, GoalFormValues>({
+    resolver: zodResolver(goalSchema),
+    defaultValues: defaultValues(),
+  });
+
+  const isRecurring = watch("isRecurring");
+  const linkedAccountIds = watch("linkedAccountIds");
 
   const openCreate = () => {
     setEditingId(null);
-    setForm(emptyForm());
+    reset(defaultValues());
     setOpen(true);
   };
 
   const openEdit = (g: Goal) => {
     setEditingId(g.id);
-    setForm({
+    reset({
       name: g.name, goalType: g.goalType, targetAmount: g.targetAmount, priority: g.priority,
       startYear: g.startYear, endYear: g.endYear, isRecurring: g.isRecurring,
       growthRateOverridePct: g.growthRateOverridePct, linkedAccountIds: g.linkedAccountIds,
@@ -43,20 +54,18 @@ export default function GoalsTab({ clientId, accountsClientId }: { clientId: num
     setOpen(true);
   };
 
-  const save = async () => {
-    const dto = { ...form, endYear: form.isRecurring ? form.endYear : form.startYear };
+  const onSubmit = handleSubmit(async (values) => {
+    const dto = { ...values, endYear: values.isRecurring ? values.endYear : values.startYear };
     if (editingId) await update.mutateAsync({ id: editingId, dto });
     else await create.mutateAsync(dto);
     setOpen(false);
-  };
+  });
 
   const toggleAccount = (accountId: number) => {
-    setForm((f) => ({
-      ...f,
-      linkedAccountIds: f.linkedAccountIds.includes(accountId)
-        ? f.linkedAccountIds.filter((id) => id !== accountId)
-        : [...f.linkedAccountIds, accountId],
-    }));
+    setValue(
+      "linkedAccountIds",
+      linkedAccountIds.includes(accountId) ? linkedAccountIds.filter((id) => id !== accountId) : [...linkedAccountIds, accountId],
+    );
   };
 
   return (
@@ -125,58 +134,45 @@ export default function GoalsTab({ clientId, accountsClientId }: { clientId: num
         <DialogTitle>{editingId ? "Edit Goal" : "Add Goal"}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} mt={1}>
-            <TextField label="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} fullWidth />
-            <TextField label="Goal Type" select value={form.goalType} onChange={(e) => setForm({ ...form, goalType: e.target.value as GoalType })} fullWidth>
+            <FormTextField name="name" control={control} label="Name" autoFocus />
+            <FormTextField name="goalType" control={control} label="Goal Type" select>
               {goalTypes.map((t) => (
                 <MenuItem key={t} value={t}>
                   {t}
                 </MenuItem>
               ))}
-            </TextField>
+            </FormTextField>
             <Stack direction="row" spacing={2}>
-              <TextField
-                label={form.isRecurring ? "Amount per Year (₹)" : "Target Amount (₹, today's value)"}
+              <FormTextField
+                name="targetAmount"
+                control={control}
+                label={isRecurring ? "Amount per Year (₹)" : "Target Amount (₹, today's value)"}
                 type="number"
-                value={form.targetAmount}
-                onChange={(e) => setForm({ ...form, targetAmount: Number(e.target.value) })}
-                fullWidth
               />
-              <TextField label="Priority" select value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value as GoalPriority })} fullWidth>
+              <FormTextField name="priority" control={control} label="Priority" select>
                 {priorities.map((p) => (
                   <MenuItem key={p} value={p}>
                     {p}
                   </MenuItem>
                 ))}
-              </TextField>
+              </FormTextField>
             </Stack>
             <FormControlLabel
-              control={<Switch checked={form.isRecurring} onChange={(e) => setForm({ ...form, isRecurring: e.target.checked })} />}
+              control={
+                <Switch checked={isRecurring} onChange={(e) => setValue("isRecurring", e.target.checked)} />
+              }
               label="Recurring (e.g. ongoing retirement spending)"
             />
             <Stack direction="row" spacing={2}>
-              <TextField
-                label="Start Year"
-                type="number"
-                value={form.startYear}
-                onChange={(e) => setForm({ ...form, startYear: Number(e.target.value) })}
-                fullWidth
-              />
-              {form.isRecurring && (
-                <TextField
-                  label="End Year"
-                  type="number"
-                  value={form.endYear}
-                  onChange={(e) => setForm({ ...form, endYear: Number(e.target.value) })}
-                  fullWidth
-                />
-              )}
+              <FormTextField name="startYear" control={control} label="Start Year" type="number" />
+              {isRecurring && <FormTextField name="endYear" control={control} label="End Year" type="number" />}
             </Stack>
-            <TextField
+            <FormTextField
+              name="growthRateOverridePct"
+              control={control}
               label="Growth Rate Override % (blank = use global inflation)"
               type="number"
-              value={form.growthRateOverridePct ?? ""}
-              onChange={(e) => setForm({ ...form, growthRateOverridePct: e.target.value === "" ? null : Number(e.target.value) })}
-              fullWidth
+              nullable
             />
 
             <Typography variant="subtitle2">Earmark specific accounts (optional — otherwise funded from the general pool)</Typography>
@@ -184,7 +180,7 @@ export default function GoalsTab({ clientId, accountsClientId }: { clientId: num
               {accountsList.data?.map((a) => (
                 <FormControlLabel
                   key={a.id}
-                  control={<Checkbox checked={form.linkedAccountIds.includes(a.id)} onChange={() => toggleAccount(a.id)} />}
+                  control={<Checkbox checked={linkedAccountIds.includes(a.id)} onChange={() => toggleAccount(a.id)} />}
                   label={a.name}
                 />
               ))}
@@ -196,7 +192,7 @@ export default function GoalsTab({ clientId, accountsClientId }: { clientId: num
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpen(false)}>Cancel</Button>
-          <Button variant="contained" disabled={!form.name} onClick={save}>
+          <Button variant="contained" onClick={onSubmit}>
             Save
           </Button>
         </DialogActions>

@@ -1,13 +1,17 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { z } from "zod";
 import {
   Box, Button, Card, CardActionArea, CardContent, Chip, Dialog, DialogActions, DialogContent, DialogTitle,
-  Grid, MenuItem, Stack, TextField, Typography,
+  Grid, MenuItem, Stack, Typography,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import PersonIcon from "@mui/icons-material/Person";
 import { useClients, useCreateClient } from "../api/queries";
-import type { ClientUpsert, TaxRegime } from "../api/types";
+import { FormTextField } from "../components/FormTextField";
+import { clientSchema, type ClientFormValues } from "../validation/schemas";
 
 const riskColor: Record<string, "success" | "info" | "warning" | "error" | "default"> = {
   Conservative: "info",
@@ -17,38 +21,43 @@ const riskColor: Record<string, "success" | "info" | "warning" | "error" | "defa
   Aggressive: "error",
 };
 
-function emptyForm(): ClientUpsert {
-  return {
-    name: "",
-    dateOfBirth: "1990-01-01",
-    retirementAge: 60,
-    lifeExpectancyAge: 85,
-    taxRegime: "New",
-    totalDeductionsAmount: 0,
-    riskProfileOverride: null,
-    notes: "",
-  };
-}
+const defaultValues: ClientFormValues = {
+  name: "",
+  dateOfBirth: "1990-01-01",
+  retirementAge: 60,
+  lifeExpectancyAge: 85,
+  taxRegime: "New",
+  totalDeductionsAmount: 0,
+  riskProfileOverride: null,
+  notes: "",
+};
 
 export default function ClientsListPage() {
   const { data: clients, isLoading } = useClients();
   const createClient = useCreateClient();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState<ClientUpsert>(emptyForm());
+  const { control, handleSubmit, reset } = useForm<z.input<typeof clientSchema>, any, ClientFormValues>({
+    resolver: zodResolver(clientSchema),
+    defaultValues,
+  });
 
-  const handleCreate = async () => {
-    const created = await createClient.mutateAsync(form);
-    setOpen(false);
-    setForm(emptyForm());
-    navigate(`/clients/${created.id}`);
+  const openDialog = () => {
+    reset(defaultValues);
+    setOpen(true);
   };
+
+  const onSubmit = handleSubmit(async (values) => {
+    const created = await createClient.mutateAsync(values);
+    setOpen(false);
+    navigate(`/clients/${created.id}`);
+  });
 
   return (
     <Box>
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h4">Clients</Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={() => setOpen(true)}>
+        <Button variant="contained" startIcon={<AddIcon />} onClick={openDialog}>
           New Client
         </Button>
       </Stack>
@@ -64,7 +73,7 @@ export default function ClientsListPage() {
       <Grid container spacing={2}>
         {clients?.map((client) => (
           <Grid key={client.id} size={{ xs: 12, sm: 6, md: 4 }}>
-            <Card variant="outlined">
+            <Card>
               <CardActionArea onClick={() => navigate(`/clients/${client.id}`)}>
                 <CardContent>
                   <Stack direction="row" spacing={1.5} alignItems="center" mb={1}>
@@ -94,52 +103,27 @@ export default function ClientsListPage() {
         <DialogTitle>New Client</DialogTitle>
         <DialogContent>
           <Stack spacing={2} mt={1}>
-            <TextField
-              label="Full Name"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              fullWidth
-              autoFocus
-            />
-            <TextField
+            <FormTextField name="name" control={control} label="Full Name" autoFocus />
+            <FormTextField
+              name="dateOfBirth"
+              control={control}
               label="Date of Birth"
               type="date"
-              value={form.dateOfBirth}
-              onChange={(e) => setForm({ ...form, dateOfBirth: e.target.value })}
               InputLabelProps={{ shrink: true }}
-              fullWidth
             />
             <Stack direction="row" spacing={2}>
-              <TextField
-                label="Retirement Age"
-                type="number"
-                value={form.retirementAge}
-                onChange={(e) => setForm({ ...form, retirementAge: Number(e.target.value) })}
-                fullWidth
-              />
-              <TextField
-                label="Life Expectancy Age"
-                type="number"
-                value={form.lifeExpectancyAge}
-                onChange={(e) => setForm({ ...form, lifeExpectancyAge: Number(e.target.value) })}
-                fullWidth
-              />
+              <FormTextField name="retirementAge" control={control} label="Retirement Age" type="number" />
+              <FormTextField name="lifeExpectancyAge" control={control} label="Life Expectancy Age" type="number" />
             </Stack>
-            <TextField
-              label="Tax Regime"
-              select
-              value={form.taxRegime}
-              onChange={(e) => setForm({ ...form, taxRegime: e.target.value as TaxRegime })}
-              fullWidth
-            >
+            <FormTextField name="taxRegime" control={control} label="Tax Regime" select>
               <MenuItem value="New">New Regime</MenuItem>
               <MenuItem value="Old">Old Regime</MenuItem>
-            </TextField>
+            </FormTextField>
           </Stack>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpen(false)}>Cancel</Button>
-          <Button variant="contained" disabled={!form.name || createClient.isPending} onClick={handleCreate}>
+          <Button variant="contained" disabled={createClient.isPending} onClick={onSubmit}>
             Create
           </Button>
         </DialogActions>

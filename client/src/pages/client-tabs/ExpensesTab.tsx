@@ -1,44 +1,52 @@
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { z } from "zod";
 import {
   Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, MenuItem, Stack, Table,
-  TableBody, TableCell, TableHead, TableRow, TextField, Typography,
+  TableBody, TableCell, TableHead, TableRow, Typography,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useExpenses } from "../../api/queries";
 import { formatInr } from "../../utils/currency";
-import type { Expense, ExpenseCategory, ExpenseUpsert } from "../../api/types";
+import { FormTextField } from "../../components/FormTextField";
+import { expenseSchema, type ExpenseFormValues } from "../../validation/schemas";
+import type { Expense } from "../../api/types";
 
-const categories: ExpenseCategory[] = ["Essential", "Discretionary", "Healthcare", "Housing", "Other"];
+const categories = ["Essential", "Discretionary", "Healthcare", "Housing", "Other"];
 
-function emptyForm(): ExpenseUpsert {
-  return { name: "", category: "Essential", annualAmount: 0, startYear: new Date().getFullYear(), endYear: null, growthRateOverridePct: null };
-}
+const defaultValues: ExpenseFormValues = {
+  name: "", category: "Essential", annualAmount: 0, startYear: new Date().getFullYear(), endYear: null, growthRateOverridePct: null,
+};
 
 export default function ExpensesTab({ clientId }: { clientId: number }) {
   const { list, create, update, remove } = useExpenses(clientId);
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [form, setForm] = useState<ExpenseUpsert>(emptyForm());
+  const { control, handleSubmit, reset } = useForm<z.input<typeof expenseSchema>, any, ExpenseFormValues>({
+    resolver: zodResolver(expenseSchema),
+    defaultValues,
+  });
 
   const openCreate = () => {
     setEditingId(null);
-    setForm(emptyForm());
+    reset(defaultValues);
     setOpen(true);
   };
 
   const openEdit = (e: Expense) => {
     setEditingId(e.id);
-    setForm({ name: e.name, category: e.category, annualAmount: e.annualAmount, startYear: e.startYear, endYear: e.endYear, growthRateOverridePct: e.growthRateOverridePct });
+    reset({ name: e.name, category: e.category, annualAmount: e.annualAmount, startYear: e.startYear, endYear: e.endYear, growthRateOverridePct: e.growthRateOverridePct });
     setOpen(true);
   };
 
-  const save = async () => {
-    if (editingId) await update.mutateAsync({ id: editingId, dto: form });
-    else await create.mutateAsync(form);
+  const onSubmit = handleSubmit(async (values) => {
+    if (editingId) await update.mutateAsync({ id: editingId, dto: values });
+    else await create.mutateAsync(values);
     setOpen(false);
-  };
+  });
 
   return (
     <Box>
@@ -94,49 +102,31 @@ export default function ExpensesTab({ clientId }: { clientId: number }) {
         <DialogTitle>{editingId ? "Edit Expense" : "Add Expense"}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} mt={1}>
-            <TextField label="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} fullWidth />
-            <TextField label="Category" select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value as ExpenseCategory })} fullWidth>
+            <FormTextField name="name" control={control} label="Name" autoFocus />
+            <FormTextField name="category" control={control} label="Category" select>
               {categories.map((c) => (
                 <MenuItem key={c} value={c}>
                   {c}
                 </MenuItem>
               ))}
-            </TextField>
-            <TextField
-              label="Annual Amount (₹)"
-              type="number"
-              value={form.annualAmount}
-              onChange={(e) => setForm({ ...form, annualAmount: Number(e.target.value) })}
-              fullWidth
-            />
+            </FormTextField>
+            <FormTextField name="annualAmount" control={control} label="Annual Amount (₹)" type="number" />
             <Stack direction="row" spacing={2}>
-              <TextField
-                label="Start Year"
-                type="number"
-                value={form.startYear}
-                onChange={(e) => setForm({ ...form, startYear: Number(e.target.value) })}
-                fullWidth
-              />
-              <TextField
-                label="End Year (blank = ongoing)"
-                type="number"
-                value={form.endYear ?? ""}
-                onChange={(e) => setForm({ ...form, endYear: e.target.value === "" ? null : Number(e.target.value) })}
-                fullWidth
-              />
+              <FormTextField name="startYear" control={control} label="Start Year" type="number" />
+              <FormTextField name="endYear" control={control} label="End Year (blank = ongoing)" type="number" nullable />
             </Stack>
-            <TextField
+            <FormTextField
+              name="growthRateOverridePct"
+              control={control}
               label="Growth Rate Override % (blank = use global inflation)"
               type="number"
-              value={form.growthRateOverridePct ?? ""}
-              onChange={(e) => setForm({ ...form, growthRateOverridePct: e.target.value === "" ? null : Number(e.target.value) })}
-              fullWidth
+              nullable
             />
           </Stack>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpen(false)}>Cancel</Button>
-          <Button variant="contained" disabled={!form.name} onClick={save}>
+          <Button variant="contained" onClick={onSubmit}>
             Save
           </Button>
         </DialogActions>

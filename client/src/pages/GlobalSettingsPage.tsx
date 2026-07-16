@@ -1,32 +1,42 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { z } from "zod";
 import {
-  Alert, Box, Button, Card, CardContent, Grid, Stack, Table, TableBody, TableCell, TableHead, TableRow,
-  TextField, Typography,
+  Alert, Box, Button, Card, CardContent, Grid, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography,
 } from "@mui/material";
 import {
   useAssetClasses, useCapitalGainsRules, useCorrelations, useGlobalSettings, useTaxSettingsList, useTaxSlabs,
   useUpdateAssetClass, useUpdateCapitalGainsRule, useUpdateCorrelation, useUpdateGlobalSettings, useUpdateTaxSettings,
   useUpdateTaxSlab,
 } from "../api/queries";
+import { FormTextField } from "../components/FormTextField";
+import {
+  assetClassSchema, capitalGainsRuleSchema, correlationSchema, globalSettingsSchema, taxSettingsSchema, taxSlabSchema,
+  type AssetClassFormValues, type CapitalGainsRuleFormValues, type CorrelationFormValues, type GlobalSettingsFormValues,
+  type TaxSettingsFormValues, type TaxSlabFormValues,
+} from "../validation/schemas";
 import type { AssetClass, CapitalGainsRule, Correlation, TaxSettingsEntry, TaxSlab } from "../api/types";
 
 function AssetClassRow({ ac }: { ac: AssetClass }) {
-  const [expReturn, setExpReturn] = useState(ac.expectedAnnualReturnPct);
-  const [vol, setVol] = useState(ac.annualVolatilityPct);
   const update = useUpdateAssetClass();
-  const dirty = expReturn !== ac.expectedAnnualReturnPct || vol !== ac.annualVolatilityPct;
+  const { control, handleSubmit, formState: { isDirty } } = useForm<z.input<typeof assetClassSchema>, any, AssetClassFormValues>({
+    resolver: zodResolver(assetClassSchema),
+    defaultValues: { expectedAnnualReturnPct: ac.expectedAnnualReturnPct, annualVolatilityPct: ac.annualVolatilityPct },
+  });
+  const onSubmit = handleSubmit((values) => update.mutate({ id: ac.id, dto: values }));
 
   return (
     <TableRow>
       <TableCell>{ac.name}</TableCell>
       <TableCell>
-        <TextField size="small" type="number" value={expReturn} onChange={(e) => setExpReturn(Number(e.target.value))} sx={{ width: 100 }} />
+        <FormTextField name="expectedAnnualReturnPct" control={control} type="number" sx={{ width: 110 }} />
       </TableCell>
       <TableCell>
-        <TextField size="small" type="number" value={vol} onChange={(e) => setVol(Number(e.target.value))} sx={{ width: 100 }} />
+        <FormTextField name="annualVolatilityPct" control={control} type="number" sx={{ width: 110 }} />
       </TableCell>
       <TableCell align="right">
-        <Button size="small" disabled={!dirty} onClick={() => update.mutate({ id: ac.id, dto: { expectedAnnualReturnPct: expReturn, annualVolatilityPct: vol } })}>
+        <Button size="small" disabled={!isDirty} onClick={onSubmit}>
           Save
         </Button>
       </TableCell>
@@ -35,18 +45,21 @@ function AssetClassRow({ ac }: { ac: AssetClass }) {
 }
 
 function CorrelationRow({ c, nameA, nameB }: { c: Correlation; nameA: string; nameB: string }) {
-  const [value, setValue] = useState(c.correlation);
   const update = useUpdateCorrelation();
-  const dirty = value !== c.correlation;
+  const { control, handleSubmit, formState: { isDirty } } = useForm<z.input<typeof correlationSchema>, any, CorrelationFormValues>({
+    resolver: zodResolver(correlationSchema),
+    defaultValues: { correlation: c.correlation },
+  });
+  const onSubmit = handleSubmit((values) => update.mutate({ ...c, ...values }));
 
   return (
     <TableRow>
       <TableCell>{nameA} × {nameB}</TableCell>
       <TableCell>
-        <TextField size="small" type="number" value={value} onChange={(e) => setValue(Number(e.target.value))} sx={{ width: 100 }} inputProps={{ step: 0.05, min: -1, max: 1 }} />
+        <FormTextField name="correlation" control={control} type="number" sx={{ width: 110 }} inputProps={{ step: 0.05, min: -1, max: 1 }} />
       </TableCell>
       <TableCell align="right">
-        <Button size="small" disabled={!dirty} onClick={() => update.mutate({ ...c, correlation: value })}>
+        <Button size="small" disabled={!isDirty} onClick={onSubmit}>
           Save
         </Button>
       </TableCell>
@@ -55,22 +68,24 @@ function CorrelationRow({ c, nameA, nameB }: { c: Correlation; nameA: string; na
 }
 
 function TaxSlabRow({ slab }: { slab: TaxSlab }) {
-  const [upper, setUpper] = useState(slab.upperBound);
-  const [rate, setRate] = useState(slab.ratePct);
   const update = useUpdateTaxSlab();
-  const dirty = upper !== slab.upperBound || rate !== slab.ratePct;
+  const { control, handleSubmit, formState: { isDirty } } = useForm<z.input<typeof taxSlabSchema>, any, TaxSlabFormValues>({
+    resolver: zodResolver(taxSlabSchema),
+    defaultValues: { lowerBound: slab.lowerBound, upperBound: slab.upperBound, ratePct: slab.ratePct },
+  });
+  const onSubmit = handleSubmit((values) => update.mutate({ ...slab, ...values }));
 
   return (
     <TableRow>
       <TableCell>₹{slab.lowerBound.toLocaleString("en-IN")}</TableCell>
       <TableCell>
-        <TextField size="small" type="number" placeholder="No cap" value={upper ?? ""} onChange={(e) => setUpper(e.target.value === "" ? null : Number(e.target.value))} sx={{ width: 130 }} />
+        <FormTextField name="upperBound" control={control} type="number" placeholder="No cap" nullable sx={{ width: 140 }} />
       </TableCell>
       <TableCell>
-        <TextField size="small" type="number" value={rate} onChange={(e) => setRate(Number(e.target.value))} sx={{ width: 90 }} />
+        <FormTextField name="ratePct" control={control} type="number" sx={{ width: 100 }} />
       </TableCell>
       <TableCell align="right">
-        <Button size="small" disabled={!dirty} onClick={() => update.mutate({ ...slab, upperBound: upper, ratePct: rate })}>
+        <Button size="small" disabled={!isDirty} onClick={onSubmit}>
           Save
         </Button>
       </TableCell>
@@ -79,20 +94,26 @@ function TaxSlabRow({ slab }: { slab: TaxSlab }) {
 }
 
 function TaxSettingsCard({ settings }: { settings: TaxSettingsEntry }) {
-  const [form, setForm] = useState(settings);
   const update = useUpdateTaxSettings();
-  const dirty = JSON.stringify(form) !== JSON.stringify(settings);
+  const { control, handleSubmit, formState: { isDirty } } = useForm<z.input<typeof taxSettingsSchema>, any, TaxSettingsFormValues>({
+    resolver: zodResolver(taxSettingsSchema),
+    defaultValues: {
+      standardDeduction: settings.standardDeduction, rebateIncomeThreshold: settings.rebateIncomeThreshold,
+      rebateMaxAmount: settings.rebateMaxAmount, cessPct: settings.cessPct,
+    },
+  });
+  const onSubmit = handleSubmit((values) => update.mutate({ ...settings, ...values }));
 
   return (
-    <Card variant="outlined">
+    <Card>
       <CardContent>
         <Typography variant="subtitle1" gutterBottom>{settings.regime} Regime</Typography>
         <Stack spacing={2}>
-          <TextField label="Standard Deduction (₹)" type="number" size="small" value={form.standardDeduction} onChange={(e) => setForm({ ...form, standardDeduction: Number(e.target.value) })} />
-          <TextField label="Rebate Income Threshold (₹)" type="number" size="small" value={form.rebateIncomeThreshold} onChange={(e) => setForm({ ...form, rebateIncomeThreshold: Number(e.target.value) })} />
-          <TextField label="Rebate Max Amount (₹)" type="number" size="small" value={form.rebateMaxAmount} onChange={(e) => setForm({ ...form, rebateMaxAmount: Number(e.target.value) })} />
-          <TextField label="Cess (%)" type="number" size="small" value={form.cessPct} onChange={(e) => setForm({ ...form, cessPct: Number(e.target.value) })} />
-          <Button variant="outlined" disabled={!dirty} onClick={() => update.mutate(form)}>Save</Button>
+          <FormTextField name="standardDeduction" control={control} label="Standard Deduction (₹)" type="number" />
+          <FormTextField name="rebateIncomeThreshold" control={control} label="Rebate Income Threshold (₹)" type="number" />
+          <FormTextField name="rebateMaxAmount" control={control} label="Rebate Max Amount (₹)" type="number" />
+          <FormTextField name="cessPct" control={control} label="Cess (%)" type="number" />
+          <Button variant="outlined" disabled={!isDirty} onClick={onSubmit}>Save</Button>
         </Stack>
       </CardContent>
     </Card>
@@ -100,23 +121,25 @@ function TaxSettingsCard({ settings }: { settings: TaxSettingsEntry }) {
 }
 
 function CapitalGainsRuleRow({ rule }: { rule: CapitalGainsRule }) {
-  const [longTermRate, setLongTermRate] = useState(rule.longTermRatePct);
-  const [exemption, setExemption] = useState(rule.longTermExemptionAmount);
   const update = useUpdateCapitalGainsRule();
-  const dirty = longTermRate !== rule.longTermRatePct || exemption !== rule.longTermExemptionAmount;
+  const { control, handleSubmit, formState: { isDirty } } = useForm<z.input<typeof capitalGainsRuleSchema>, any, CapitalGainsRuleFormValues>({
+    resolver: zodResolver(capitalGainsRuleSchema),
+    defaultValues: { longTermRatePct: rule.longTermRatePct, longTermExemptionAmount: rule.longTermExemptionAmount },
+  });
+  const onSubmit = handleSubmit((values) => update.mutate({ ...rule, ...values }));
 
   return (
     <TableRow>
       <TableCell>{rule.assetCategory}</TableCell>
       <TableCell>{rule.shortTermTaxedAtSlabRate ? "Always slab rate" : `${rule.holdingPeriodMonthsThreshold}mo`}</TableCell>
       <TableCell>
-        <TextField size="small" type="number" value={longTermRate} onChange={(e) => setLongTermRate(Number(e.target.value))} sx={{ width: 90 }} />
+        <FormTextField name="longTermRatePct" control={control} type="number" sx={{ width: 100 }} />
       </TableCell>
       <TableCell>
-        <TextField size="small" type="number" value={exemption} onChange={(e) => setExemption(Number(e.target.value))} sx={{ width: 120 }} />
+        <FormTextField name="longTermExemptionAmount" control={control} type="number" sx={{ width: 130 }} />
       </TableCell>
       <TableCell align="right">
-        <Button size="small" disabled={!dirty} onClick={() => update.mutate({ ...rule, longTermRatePct: longTermRate, longTermExemptionAmount: exemption })}>
+        <Button size="small" disabled={!isDirty} onClick={onSubmit}>
           Save
         </Button>
       </TableCell>
@@ -127,15 +150,14 @@ function CapitalGainsRuleRow({ rule }: { rule: CapitalGainsRule }) {
 export default function GlobalSettingsPage() {
   const { data: settings } = useGlobalSettings();
   const updateSettings = useUpdateGlobalSettings();
-  const [inflation, setInflation] = useState<number | null>(null);
-  const [simCount, setSimCount] = useState<number | null>(null);
+  const { control, handleSubmit, reset, formState: { isDirty } } = useForm<z.input<typeof globalSettingsSchema>, any, GlobalSettingsFormValues>({
+    resolver: zodResolver(globalSettingsSchema),
+    defaultValues: { inflationRatePct: 7, simulationCount: 2000 },
+  });
 
   useEffect(() => {
-    if (settings) {
-      setInflation(settings.inflationRatePct);
-      setSimCount(settings.simulationCount);
-    }
-  }, [settings]);
+    if (settings) reset(settings);
+  }, [settings, reset]);
 
   const { data: assetClasses } = useAssetClasses();
   const { data: correlations } = useCorrelations();
@@ -144,23 +166,19 @@ export default function GlobalSettingsPage() {
   const { data: cgtRules } = useCapitalGainsRules();
 
   const nameFor = (id: number) => assetClasses?.find((a) => a.id === id)?.name ?? String(id);
-  const dirty = settings && (inflation !== settings.inflationRatePct || simCount !== settings.simulationCount);
+  const onSubmitGeneral = handleSubmit((values) => updateSettings.mutate(values));
 
   return (
     <Box>
       <Typography variant="h4" mb={3}>Global Settings</Typography>
 
-      <Card variant="outlined" sx={{ mb: 3 }}>
+      <Card sx={{ mb: 3 }}>
         <CardContent>
           <Typography variant="h6" gutterBottom>General</Typography>
-          <Stack direction="row" spacing={2} alignItems="center">
-            <TextField label="Inflation Rate (%)" type="number" value={inflation ?? ""} onChange={(e) => setInflation(Number(e.target.value))} sx={{ width: 200 }} />
-            <TextField label="Monte Carlo Simulation Count" type="number" value={simCount ?? ""} onChange={(e) => setSimCount(Number(e.target.value))} sx={{ width: 260 }} />
-            <Button
-              variant="contained"
-              disabled={!dirty}
-              onClick={() => inflation != null && simCount != null && updateSettings.mutate({ inflationRatePct: inflation, simulationCount: simCount })}
-            >
+          <Stack direction="row" spacing={2} alignItems="flex-start">
+            <FormTextField name="inflationRatePct" control={control} label="Inflation Rate (%)" type="number" sx={{ width: 200 }} />
+            <FormTextField name="simulationCount" control={control} label="Monte Carlo Simulation Count" type="number" sx={{ width: 260 }} />
+            <Button variant="contained" disabled={!isDirty} onClick={onSubmitGeneral}>
               Save
             </Button>
           </Stack>
@@ -168,7 +186,7 @@ export default function GlobalSettingsPage() {
         </CardContent>
       </Card>
 
-      <Card variant="outlined" sx={{ mb: 3 }}>
+      <Card sx={{ mb: 3 }}>
         <CardContent>
           <Typography variant="h6" gutterBottom>Asset Class Assumptions</Typography>
           <Table size="small">
@@ -187,7 +205,7 @@ export default function GlobalSettingsPage() {
         </CardContent>
       </Card>
 
-      <Card variant="outlined" sx={{ mb: 3 }}>
+      <Card sx={{ mb: 3 }}>
         <CardContent>
           <Typography variant="h6" gutterBottom>Correlation Matrix</Typography>
           <Table size="small">
@@ -215,7 +233,7 @@ export default function GlobalSettingsPage() {
         ))}
       </Grid>
 
-      <Card variant="outlined" sx={{ mb: 3 }}>
+      <Card sx={{ mb: 3 }}>
         <CardContent>
           <Typography variant="h6" gutterBottom>Income Tax Slabs</Typography>
           {(["New", "Old"] as const).map((regime) => (
@@ -241,7 +259,7 @@ export default function GlobalSettingsPage() {
         </CardContent>
       </Card>
 
-      <Card variant="outlined">
+      <Card>
         <CardContent>
           <Typography variant="h6" gutterBottom>Capital Gains Rules</Typography>
           <Table size="small">
