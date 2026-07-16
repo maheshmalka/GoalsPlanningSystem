@@ -48,7 +48,10 @@ public abstract class GoalsPlanningSystemDbContext(DbContextOptions options) : D
         {
             e.Property(a => a.Name).IsRequired().HasMaxLength(200);
             e.HasMany(a => a.Allocations).WithOne(al => al.Account).HasForeignKey(al => al.AccountId).OnDelete(DeleteBehavior.Cascade);
-            e.HasMany(a => a.GoalLinks).WithOne(gl => gl.Account).HasForeignKey(gl => gl.AccountId).OnDelete(DeleteBehavior.Cascade);
+            // Restrict, not Cascade: GoalAccountLink already cascades from Goal, and SQL Server (unlike
+            // SQLite) rejects a table with two cascade paths back to the same ancestor (Client). Accounts
+            // with active goal links are cleaned up explicitly in AccountsController before deletion.
+            e.HasMany(a => a.GoalLinks).WithOne(gl => gl.Account).HasForeignKey(gl => gl.AccountId).OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<AccountAllocation>(e =>

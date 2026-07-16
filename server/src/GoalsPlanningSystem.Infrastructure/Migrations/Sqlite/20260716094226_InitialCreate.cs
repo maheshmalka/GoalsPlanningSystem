@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
+namespace GoalsPlanningSystem.Infrastructure.Migrations.Sqlite
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration
@@ -15,11 +15,11 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
                 name: "AssetClasses",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    ExpectedAnnualReturnPct = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false),
-                    AnnualVolatilityPct = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    ExpectedAnnualReturnPct = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: false),
+                    AnnualVolatilityPct = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -30,14 +30,14 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
                 name: "CapitalGainsRules",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    AssetCategory = table.Column<int>(type: "int", nullable: false),
-                    HoldingPeriodMonthsThreshold = table.Column<int>(type: "int", nullable: false),
-                    ShortTermTaxedAtSlabRate = table.Column<bool>(type: "bit", nullable: false),
-                    ShortTermRatePct = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false),
-                    LongTermRatePct = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false),
-                    LongTermExemptionAmount = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    AssetCategory = table.Column<int>(type: "INTEGER", nullable: false),
+                    HoldingPeriodMonthsThreshold = table.Column<int>(type: "INTEGER", nullable: false),
+                    ShortTermTaxedAtSlabRate = table.Column<bool>(type: "INTEGER", nullable: false),
+                    ShortTermRatePct = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: false),
+                    LongTermRatePct = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: false),
+                    LongTermExemptionAmount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -48,20 +48,20 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
                 name: "Clients",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    DateOfBirth = table.Column<DateOnly>(type: "date", nullable: false),
-                    RetirementAge = table.Column<int>(type: "int", nullable: false),
-                    LifeExpectancyAge = table.Column<int>(type: "int", nullable: false),
-                    TaxRegime = table.Column<int>(type: "int", nullable: false),
-                    TotalDeductionsAmount = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false),
-                    RiskScore = table.Column<int>(type: "int", nullable: true),
-                    RiskProfile = table.Column<int>(type: "int", nullable: true),
-                    RiskProfileOverride = table.Column<int>(type: "int", nullable: true),
-                    Notes = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    DateOfBirth = table.Column<DateOnly>(type: "TEXT", nullable: false),
+                    RetirementAge = table.Column<int>(type: "INTEGER", nullable: false),
+                    LifeExpectancyAge = table.Column<int>(type: "INTEGER", nullable: false),
+                    TaxRegime = table.Column<int>(type: "INTEGER", nullable: false),
+                    TotalDeductionsAmount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: false),
+                    RiskScore = table.Column<int>(type: "INTEGER", nullable: true),
+                    RiskProfile = table.Column<int>(type: "INTEGER", nullable: true),
+                    RiskProfileOverride = table.Column<int>(type: "INTEGER", nullable: true),
+                    Notes = table.Column<string>(type: "TEXT", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -72,10 +72,10 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
                 name: "GlobalSettings",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    InflationRatePct = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false),
-                    SimulationCount = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    InflationRatePct = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: false),
+                    SimulationCount = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -86,10 +86,10 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
                 name: "RiskQuestions",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    DisplayOrder = table.Column<int>(type: "int", nullable: false),
-                    Text = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    DisplayOrder = table.Column<int>(type: "INTEGER", nullable: false),
+                    Text = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -100,13 +100,13 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
                 name: "TaxSettings",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Regime = table.Column<int>(type: "int", nullable: false),
-                    StandardDeduction = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false),
-                    RebateIncomeThreshold = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false),
-                    RebateMaxAmount = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false),
-                    CessPct = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Regime = table.Column<int>(type: "INTEGER", nullable: false),
+                    StandardDeduction = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: false),
+                    RebateIncomeThreshold = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: false),
+                    RebateMaxAmount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: false),
+                    CessPct = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -117,13 +117,13 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
                 name: "TaxSlabs",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Regime = table.Column<int>(type: "int", nullable: false),
-                    SlabOrder = table.Column<int>(type: "int", nullable: false),
-                    LowerBound = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false),
-                    UpperBound = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: true),
-                    RatePct = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Regime = table.Column<int>(type: "INTEGER", nullable: false),
+                    SlabOrder = table.Column<int>(type: "INTEGER", nullable: false),
+                    LowerBound = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: false),
+                    UpperBound = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: true),
+                    RatePct = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -134,11 +134,11 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
                 name: "AssetClassCorrelations",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    AssetClassAId = table.Column<int>(type: "int", nullable: false),
-                    AssetClassBId = table.Column<int>(type: "int", nullable: false),
-                    Correlation = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    AssetClassAId = table.Column<int>(type: "INTEGER", nullable: false),
+                    AssetClassBId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Correlation = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -161,17 +161,17 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
                 name: "Accounts",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    ClientId = table.Column<int>(type: "int", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    AccountType = table.Column<int>(type: "int", nullable: false),
-                    CurrentBalance = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false),
-                    ContributionAmount = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false),
-                    ContributionFrequency = table.Column<int>(type: "int", nullable: false),
-                    EmployerMatchPct = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: true),
-                    NpsAnnuitizationPct = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: true),
-                    AssumedAnnuityRatePct = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: true)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    ClientId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    AccountType = table.Column<int>(type: "INTEGER", nullable: false),
+                    CurrentBalance = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: false),
+                    ContributionAmount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: false),
+                    ContributionFrequency = table.Column<int>(type: "INTEGER", nullable: false),
+                    EmployerMatchPct = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: true),
+                    NpsAnnuitizationPct = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: true),
+                    AssumedAnnuityRatePct = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -188,15 +188,15 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
                 name: "Expenses",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    ClientId = table.Column<int>(type: "int", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Category = table.Column<int>(type: "int", nullable: false),
-                    AnnualAmount = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false),
-                    StartYear = table.Column<int>(type: "int", nullable: false),
-                    EndYear = table.Column<int>(type: "int", nullable: true),
-                    GrowthRateOverridePct = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: true)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    ClientId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Name = table.Column<string>(type: "TEXT", nullable: false),
+                    Category = table.Column<int>(type: "INTEGER", nullable: false),
+                    AnnualAmount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: false),
+                    StartYear = table.Column<int>(type: "INTEGER", nullable: false),
+                    EndYear = table.Column<int>(type: "INTEGER", nullable: true),
+                    GrowthRateOverridePct = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -213,17 +213,17 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
                 name: "Goals",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    ClientId = table.Column<int>(type: "int", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    GoalType = table.Column<int>(type: "int", nullable: false),
-                    TargetAmount = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false),
-                    Priority = table.Column<int>(type: "int", nullable: false),
-                    StartYear = table.Column<int>(type: "int", nullable: false),
-                    EndYear = table.Column<int>(type: "int", nullable: false),
-                    IsRecurring = table.Column<bool>(type: "bit", nullable: false),
-                    GrowthRateOverridePct = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: true)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    ClientId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    GoalType = table.Column<int>(type: "INTEGER", nullable: false),
+                    TargetAmount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: false),
+                    Priority = table.Column<int>(type: "INTEGER", nullable: false),
+                    StartYear = table.Column<int>(type: "INTEGER", nullable: false),
+                    EndYear = table.Column<int>(type: "INTEGER", nullable: false),
+                    IsRecurring = table.Column<bool>(type: "INTEGER", nullable: false),
+                    GrowthRateOverridePct = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -240,15 +240,15 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
                 name: "Incomes",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    ClientId = table.Column<int>(type: "int", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    IncomeType = table.Column<int>(type: "int", nullable: false),
-                    AnnualAmount = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false),
-                    StartYear = table.Column<int>(type: "int", nullable: false),
-                    EndYear = table.Column<int>(type: "int", nullable: true),
-                    AnnualGrowthRatePct = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    ClientId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Name = table.Column<string>(type: "TEXT", nullable: false),
+                    IncomeType = table.Column<int>(type: "INTEGER", nullable: false),
+                    AnnualAmount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: false),
+                    StartYear = table.Column<int>(type: "INTEGER", nullable: false),
+                    EndYear = table.Column<int>(type: "INTEGER", nullable: true),
+                    AnnualGrowthRatePct = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -265,12 +265,12 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
                 name: "RiskQuestionOptions",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    RiskQuestionId = table.Column<int>(type: "int", nullable: false),
-                    DisplayOrder = table.Column<int>(type: "int", nullable: false),
-                    Text = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Points = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    RiskQuestionId = table.Column<int>(type: "INTEGER", nullable: false),
+                    DisplayOrder = table.Column<int>(type: "INTEGER", nullable: false),
+                    Text = table.Column<string>(type: "TEXT", nullable: false),
+                    Points = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -287,11 +287,11 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
                 name: "AccountAllocations",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    AccountId = table.Column<int>(type: "int", nullable: false),
-                    AssetClassId = table.Column<int>(type: "int", nullable: false),
-                    Percentage = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    AccountId = table.Column<int>(type: "INTEGER", nullable: false),
+                    AssetClassId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Percentage = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -314,10 +314,10 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
                 name: "GoalAccountLinks",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    GoalId = table.Column<int>(type: "int", nullable: false),
-                    AccountId = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    GoalId = table.Column<int>(type: "INTEGER", nullable: false),
+                    AccountId = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -327,7 +327,7 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
                         column: x => x.AccountId,
                         principalTable: "Accounts",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_GoalAccountLinks_Goals_GoalId",
                         column: x => x.GoalId,
@@ -340,12 +340,12 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
                 name: "RiskQuestionnaireResponses",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    ClientId = table.Column<int>(type: "int", nullable: false),
-                    RiskQuestionId = table.Column<int>(type: "int", nullable: false),
-                    RiskQuestionOptionId = table.Column<int>(type: "int", nullable: false),
-                    CompletedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    ClientId = table.Column<int>(type: "INTEGER", nullable: false),
+                    RiskQuestionId = table.Column<int>(type: "INTEGER", nullable: false),
+                    RiskQuestionOptionId = table.Column<int>(type: "INTEGER", nullable: false),
+                    CompletedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {

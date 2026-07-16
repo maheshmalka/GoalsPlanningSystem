@@ -81,6 +81,11 @@ public class AccountsController(GoalsPlanningSystemDbContext db) : ControllerBas
         var account = await db.Accounts.FirstOrDefaultAsync(a => a.Id == id && a.ClientId == clientId);
         if (account is null) return NotFound();
 
+        // GoalAccountLink -> Account is Restrict (not Cascade), so any goal earmarks on this account
+        // must be removed explicitly before the account itself can be deleted.
+        var goalLinks = db.GoalAccountLinks.Where(l => l.AccountId == id);
+        db.GoalAccountLinks.RemoveRange(goalLinks);
+
         db.Accounts.Remove(account);
         await db.SaveChangesAsync();
         return NoContent();

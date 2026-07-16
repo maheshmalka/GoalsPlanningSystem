@@ -19,6 +19,9 @@ param sqlAdminPassword string
 @description('App Service Plan SKU. B1 is the cheapest tier that supports always-on; F1 (free) does not.')
 param appServicePlanSku string = 'B1'
 
+@description('Azure Static Web Apps is only available in a limited set of regions; eastasia is the closest to India. Does not affect end-user latency since SWA serves via a global CDN.')
+param staticWebAppLocation string = 'eastasia'
+
 var uniqueSuffix = uniqueString(resourceGroup().id)
 var sqlServerName = '${namePrefix}-sql-${uniqueSuffix}'
 var sqlDatabaseName = '${namePrefix}db'
@@ -76,7 +79,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
 
 resource staticWebApp 'Microsoft.Web/staticSites@2023-12-01' = {
   name: staticWebAppName
-  location: location
+  location: staticWebAppLocation
   sku: {
     name: 'Free'
     tier: 'Free'
@@ -101,6 +104,9 @@ resource apiApp 'Microsoft.Web/sites@2023-12-01' = {
       appSettings: [
         { name: 'DatabaseProvider', value: 'SqlServer' }
         { name: 'ASPNETCORE_ENVIRONMENT', value: 'Production' }
+        // Platform-level `cors` above covers browser preflight, but the app's own CORS middleware
+        // (Program.cs) reads this setting independently and falls back to localhost without it.
+        { name: 'Cors__AllowedOrigins__0', value: 'https://${staticWebApp.properties.defaultHostname}' }
       ]
       connectionStrings: [
         {

@@ -600,7 +600,7 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.Sqlite
                     b.HasOne("GoalsPlanningSystem.Domain.Entities.Account", "Account")
                         .WithMany("GoalLinks")
                         .HasForeignKey("AccountId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("GoalsPlanningSystem.Domain.Entities.Goal", "Goal")
