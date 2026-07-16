@@ -21,11 +21,11 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
       - name: Restore
-        run: dotnet restore server/GoalsPlanningSystem.sln
+        run: dotnet restore server/GoalsPlanningSystem.slnx
       - name: Build
-        run: dotnet build server/GoalsPlanningSystem.sln --no-restore --configuration Release
+        run: dotnet build server/GoalsPlanningSystem.slnx --no-restore --configuration Release
       - name: Test
-        run: dotnet test server/GoalsPlanningSystem.sln --no-build --configuration Release --verbosity normal
+        run: dotnet test server/GoalsPlanningSystem.slnx --no-build --configuration Release --verbosity normal
       - name: Publish API
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: dotnet publish server/src/GoalsPlanningSystem.Api/GoalsPlanningSystem.Api.csproj -c Release -o ${{ github.workspace }}/publish/api
