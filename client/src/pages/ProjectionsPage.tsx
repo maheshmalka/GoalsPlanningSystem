@@ -155,7 +155,7 @@ export default function ProjectionsPage() {
                 <ComposedChart data={bandData}>
                   <CartesianGrid stroke={colors.grid} vertical={false} />
                   <XAxis dataKey="year" stroke={colors.axis} tickLine={false} />
-                  <YAxis stroke={colors.axis} tickLine={false} tickFormatter={(v) => formatInrCompact(v)} width={80} />
+                  <YAxis stroke={colors.axis} tickLine={false} tickFormatter={(v) => formatInrCompact(v)} width={100} />
                   <Tooltip
                     formatter={(value, name) => [formatInr(Number(value)), String(name)]}
                     labelFormatter={(year) => `Year ${year}`}
@@ -180,7 +180,7 @@ export default function ProjectionsPage() {
                 <ComposedChart data={result.deterministicCashflow}>
                   <CartesianGrid stroke={colors.grid} vertical={false} />
                   <XAxis dataKey="year" stroke={colors.axis} tickLine={false} />
-                  <YAxis stroke={colors.axis} tickLine={false} tickFormatter={(v) => formatInrCompact(v)} width={80} />
+                  <YAxis stroke={colors.axis} tickLine={false} tickFormatter={(v) => formatInrCompact(v)} width={100} />
                   <Tooltip formatter={(value, name) => [formatInr(Number(value)), String(name)]} labelFormatter={(year) => `Year ${year}`} />
                   <Legend />
                   <ReferenceLine y={0} stroke={colors.axis} />
