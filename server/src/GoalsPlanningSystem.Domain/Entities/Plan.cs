@@ -10,6 +10,11 @@ public class Plan
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
 
+    /// <summary>The advisor account that owns this plan - all API access to a plan and everything
+    /// under it is scoped to this user.</summary>
+    public int UserId { get; set; }
+    public ApplicationUser User { get; set; } = null!;
+
     /// <summary>Drives the simulation's household timeline (retirement age, tax regime) when a plan has two clients.</summary>
     public int? PrimaryClientId { get; set; }
     public Client? PrimaryClient { get; set; }

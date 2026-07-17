@@ -90,6 +90,40 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.Sqlite
                     b.ToTable("AccountAllocations");
                 });
 
+            modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.ApplicationUser", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NormalizedEmail")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedEmail")
+                        .IsUnique();
+
+                    b.ToTable("Users");
+                });
+
             modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.AssetClass", b =>
                 {
                     b.Property<int>("Id")
@@ -270,6 +304,36 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.Sqlite
                     b.ToTable("Expenses");
                 });
 
+            modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.ExternalLogin", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Provider")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ProviderUserId")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("Provider", "ProviderUserId")
+                        .IsUnique();
+
+                    b.ToTable("ExternalLogins");
+                });
+
             modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.Goal", b =>
                 {
                     b.Property<int>("Id")
@@ -399,11 +463,52 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.Sqlite
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
 
                     b.HasIndex("PrimaryClientId");
 
+                    b.HasIndex("UserId");
+
                     b.ToTable("Plans");
+                });
+
+            modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.RefreshToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("ReplacedByTokenId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("RefreshTokens");
                 });
 
             modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.RiskQuestion", b =>
@@ -616,6 +721,17 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.Sqlite
                     b.Navigation("Plan");
                 });
 
+            modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.ExternalLogin", b =>
+                {
+                    b.HasOne("GoalsPlanningSystem.Domain.Entities.ApplicationUser", "User")
+                        .WithMany("ExternalLogins")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.Goal", b =>
                 {
                     b.HasOne("GoalsPlanningSystem.Domain.Entities.Plan", "Plan")
@@ -664,7 +780,26 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.Sqlite
                         .HasForeignKey("PrimaryClientId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("GoalsPlanningSystem.Domain.Entities.ApplicationUser", "User")
+                        .WithMany("Plans")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("PrimaryClient");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.RefreshToken", b =>
+                {
+                    b.HasOne("GoalsPlanningSystem.Domain.Entities.ApplicationUser", "User")
+                        .WithMany("RefreshTokens")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.RiskQuestionOption", b =>
@@ -710,6 +845,15 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.Sqlite
                     b.Navigation("Allocations");
 
                     b.Navigation("GoalLinks");
+                });
+
+            modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.ApplicationUser", b =>
+                {
+                    b.Navigation("ExternalLogins");
+
+                    b.Navigation("Plans");
+
+                    b.Navigation("RefreshTokens");
                 });
 
             modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.AssetClass", b =>

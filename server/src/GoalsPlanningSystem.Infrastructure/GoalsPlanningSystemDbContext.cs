@@ -10,6 +10,9 @@ namespace GoalsPlanningSystem.Infrastructure;
 /// </summary>
 public abstract class GoalsPlanningSystemDbContext(DbContextOptions options) : DbContext(options)
 {
+    public DbSet<ApplicationUser> Users => Set<ApplicationUser>();
+    public DbSet<ExternalLogin> ExternalLogins => Set<ExternalLogin>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<Plan> Plans => Set<Plan>();
     public DbSet<Client> Clients => Set<Client>();
     public DbSet<Account> Accounts => Set<Account>();
@@ -34,6 +37,28 @@ public abstract class GoalsPlanningSystemDbContext(DbContextOptions options) : D
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<ApplicationUser>(e =>
+        {
+            e.Property(u => u.Email).IsRequired().HasMaxLength(256);
+            e.Property(u => u.NormalizedEmail).IsRequired().HasMaxLength(256);
+            e.HasIndex(u => u.NormalizedEmail).IsUnique();
+            e.HasMany(u => u.ExternalLogins).WithOne(l => l.User).HasForeignKey(l => l.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.HasMany(u => u.RefreshTokens).WithOne(t => t.User).HasForeignKey(t => t.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.HasMany(u => u.Plans).WithOne(p => p.User).HasForeignKey(p => p.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ExternalLogin>(e =>
+        {
+            e.Property(l => l.ProviderUserId).IsRequired().HasMaxLength(256);
+            e.HasIndex(l => new { l.Provider, l.ProviderUserId }).IsUnique();
+        });
+
+        modelBuilder.Entity<RefreshToken>(e =>
+        {
+            e.Property(t => t.TokenHash).IsRequired().HasMaxLength(512);
+            e.HasIndex(t => t.TokenHash).IsUnique();
+        });
+
         modelBuilder.Entity<Plan>(e =>
         {
             e.Property(p => p.Name).IsRequired().HasMaxLength(200);

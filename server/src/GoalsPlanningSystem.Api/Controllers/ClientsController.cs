@@ -1,3 +1,4 @@
+using GoalsPlanningSystem.Api.Auth;
 using GoalsPlanningSystem.Api.DTOs;
 using GoalsPlanningSystem.Domain.Entities;
 using GoalsPlanningSystem.Infrastructure;
@@ -17,14 +18,16 @@ public class ClientsController(GoalsPlanningSystemDbContext db) : ControllerBase
     [HttpGet("{id:int}")]
     public async Task<ActionResult<ClientDetailDto>> GetById(int id)
     {
-        var client = await db.Clients.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
+        var userId = this.GetUserId();
+        var client = await db.Clients.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id && c.Plan.UserId == userId);
         return client is null ? NotFound() : ToDetailDto(client);
     }
 
     [HttpPut("{id:int}")]
     public async Task<ActionResult<ClientDetailDto>> Update(int id, ClientUpsertDto dto)
     {
-        var client = await db.Clients.FirstOrDefaultAsync(c => c.Id == id);
+        var userId = this.GetUserId();
+        var client = await db.Clients.FirstOrDefaultAsync(c => c.Id == id && c.Plan.UserId == userId);
         if (client is null) return NotFound();
 
         client.Name = dto.Name;
@@ -44,7 +47,8 @@ public class ClientsController(GoalsPlanningSystemDbContext db) : ControllerBase
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var client = await db.Clients.FirstOrDefaultAsync(c => c.Id == id);
+        var userId = this.GetUserId();
+        var client = await db.Clients.FirstOrDefaultAsync(c => c.Id == id && c.Plan.UserId == userId);
         if (client is null) return NotFound();
 
         var plan = await db.Plans.Include(p => p.Clients).FirstAsync(p => p.Id == client.PlanId);

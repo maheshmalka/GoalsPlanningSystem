@@ -1,3 +1,16 @@
+export interface User {
+  id: number;
+  email: string;
+  displayName: string;
+}
+
+export interface AuthResult {
+  accessToken: string;
+  accessTokenExpiresAt: string;
+  refreshToken: string;
+  user: User;
+}
+
 export type TaxRegime = "Old" | "New";
 
 export type AccountType =

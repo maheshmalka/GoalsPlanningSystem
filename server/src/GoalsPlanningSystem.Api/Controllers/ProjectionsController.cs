@@ -1,3 +1,4 @@
+using GoalsPlanningSystem.Api.Auth;
 using GoalsPlanningSystem.Domain.Entities;
 using GoalsPlanningSystem.Domain.Enums;
 using GoalsPlanningSystem.Infrastructure;
@@ -19,7 +20,8 @@ public class ProjectionsController(GoalsPlanningSystemDbContext db) : Controller
     [HttpPost]
     public async Task<ActionResult<SimulationResult>> Run(int planId)
     {
-        var plan = await db.Plans.AsNoTracking().Include(p => p.Clients).FirstOrDefaultAsync(p => p.Id == planId);
+        var userId = this.GetUserId();
+        var plan = await db.Plans.AsNoTracking().Include(p => p.Clients).FirstOrDefaultAsync(p => p.Id == planId && p.UserId == userId);
         if (plan is null) return NotFound();
 
         if (plan.Clients.Count == 0)

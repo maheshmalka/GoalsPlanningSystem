@@ -93,6 +93,23 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
                 });
 
             migrationBuilder.CreateTable(
+                name: "Users",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
+                    NormalizedEmail = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
+                    DisplayName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Users", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "AssetClassCorrelations",
                 columns: table => new
                 {
@@ -137,6 +154,52 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
                         name: "FK_RiskQuestionOptions_RiskQuestions_RiskQuestionId",
                         column: x => x.RiskQuestionId,
                         principalTable: "RiskQuestions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ExternalLogins",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    Provider = table.Column<int>(type: "int", nullable: false),
+                    ProviderUserId = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ExternalLogins", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ExternalLogins_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RefreshTokens",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    TokenHash = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: false),
+                    ExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    RevokedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ReplacedByTokenId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RefreshTokens", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_RefreshTokens_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -240,6 +303,7 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    UserId = table.Column<int>(type: "int", nullable: false),
                     PrimaryClientId = table.Column<int>(type: "int", nullable: true),
                     InflationRatePct = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false),
                     SimulationCount = table.Column<int>(type: "int", nullable: false),
@@ -255,6 +319,12 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
                         principalTable: "Clients",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Plans_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -419,6 +489,17 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
                 column: "PlanId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ExternalLogins_Provider_ProviderUserId",
+                table: "ExternalLogins",
+                columns: new[] { "Provider", "ProviderUserId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ExternalLogins_UserId",
+                table: "ExternalLogins",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_GoalAccountLinks_AccountId",
                 table: "GoalAccountLinks",
                 column: "AccountId");
@@ -442,6 +523,22 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
                 name: "IX_Plans_PrimaryClientId",
                 table: "Plans",
                 column: "PrimaryClientId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Plans_UserId",
+                table: "Plans",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RefreshTokens_TokenHash",
+                table: "RefreshTokens",
+                column: "TokenHash",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RefreshTokens_UserId",
+                table: "RefreshTokens",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RiskQuestionnaireResponses_ClientId_RiskQuestionId",
@@ -474,6 +571,12 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
                 name: "IX_TaxSlabs_Regime_SlabOrder",
                 table: "TaxSlabs",
                 columns: new[] { "Regime", "SlabOrder" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_NormalizedEmail",
+                table: "Users",
+                column: "NormalizedEmail",
                 unique: true);
 
             migrationBuilder.AddForeignKey(
@@ -521,10 +624,16 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
                 name: "Expenses");
 
             migrationBuilder.DropTable(
+                name: "ExternalLogins");
+
+            migrationBuilder.DropTable(
                 name: "GoalAccountLinks");
 
             migrationBuilder.DropTable(
                 name: "Incomes");
+
+            migrationBuilder.DropTable(
+                name: "RefreshTokens");
 
             migrationBuilder.DropTable(
                 name: "RiskQuestionnaireResponses");
@@ -555,6 +664,9 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
 
             migrationBuilder.DropTable(
                 name: "Plans");
+
+            migrationBuilder.DropTable(
+                name: "Users");
         }
     }
 }

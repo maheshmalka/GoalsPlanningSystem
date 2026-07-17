@@ -1,3 +1,4 @@
+using GoalsPlanningSystem.Api.Auth;
 using GoalsPlanningSystem.Api.DTOs;
 using GoalsPlanningSystem.Domain.Entities;
 using GoalsPlanningSystem.Infrastructure;
@@ -15,7 +16,7 @@ public class ExpensesController(GoalsPlanningSystemDbContext db) : ControllerBas
     [HttpGet]
     public async Task<ActionResult<List<ExpenseDto>>> GetAll(int planId)
     {
-        if (!await db.Plans.AnyAsync(p => p.Id == planId)) return NotFound();
+        if (!await db.IsPlanOwnedByUserAsync(planId, this.GetUserId())) return NotFound();
         var expenses = await db.Expenses.AsNoTracking().Where(e => e.PlanId == planId).ToListAsync();
         return expenses.Select(ToDto).ToList();
     }
@@ -23,7 +24,7 @@ public class ExpensesController(GoalsPlanningSystemDbContext db) : ControllerBas
     [HttpPost]
     public async Task<ActionResult<ExpenseDto>> Create(int planId, ExpenseUpsertDto dto)
     {
-        if (!await db.Plans.AnyAsync(p => p.Id == planId)) return NotFound();
+        if (!await db.IsPlanOwnedByUserAsync(planId, this.GetUserId())) return NotFound();
 
         var expense = new Expense
         {
@@ -38,7 +39,8 @@ public class ExpensesController(GoalsPlanningSystemDbContext db) : ControllerBas
     [HttpPut("{id:int}")]
     public async Task<ActionResult<ExpenseDto>> Update(int planId, int id, ExpenseUpsertDto dto)
     {
-        var expense = await db.Expenses.FirstOrDefaultAsync(e => e.Id == id && e.PlanId == planId);
+        var userId = this.GetUserId();
+        var expense = await db.Expenses.FirstOrDefaultAsync(e => e.Id == id && e.PlanId == planId && e.Plan.UserId == userId);
         if (expense is null) return NotFound();
 
         expense.Name = dto.Name;
@@ -55,7 +57,8 @@ public class ExpensesController(GoalsPlanningSystemDbContext db) : ControllerBas
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int planId, int id)
     {
-        var expense = await db.Expenses.FirstOrDefaultAsync(e => e.Id == id && e.PlanId == planId);
+        var userId = this.GetUserId();
+        var expense = await db.Expenses.FirstOrDefaultAsync(e => e.Id == id && e.PlanId == planId && e.Plan.UserId == userId);
         if (expense is null) return NotFound();
 
         db.Expenses.Remove(expense);

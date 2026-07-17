@@ -1,3 +1,4 @@
+using GoalsPlanningSystem.Api.Auth;
 using GoalsPlanningSystem.Api.DTOs;
 using GoalsPlanningSystem.Domain.Entities;
 using GoalsPlanningSystem.Infrastructure;
@@ -17,7 +18,7 @@ public class GoalsController(GoalsPlanningSystemDbContext db) : ControllerBase
     [HttpGet]
     public async Task<ActionResult<List<GoalDto>>> GetAll(int planId)
     {
-        if (!await db.Plans.AnyAsync(p => p.Id == planId)) return NotFound();
+        if (!await db.IsPlanOwnedByUserAsync(planId, this.GetUserId())) return NotFound();
         var goals = await db.Goals.AsNoTracking().Include(g => g.AccountLinks).Where(g => g.PlanId == planId).ToListAsync();
         return goals.Select(ToDto).ToList();
     }
@@ -25,7 +26,7 @@ public class GoalsController(GoalsPlanningSystemDbContext db) : ControllerBase
     [HttpPost]
     public async Task<ActionResult<GoalDto>> Create(int planId, GoalUpsertDto dto)
     {
-        if (!await db.Plans.AnyAsync(p => p.Id == planId)) return NotFound();
+        if (!await db.IsPlanOwnedByUserAsync(planId, this.GetUserId())) return NotFound();
 
         var goal = new Goal
         {
@@ -42,7 +43,8 @@ public class GoalsController(GoalsPlanningSystemDbContext db) : ControllerBase
     [HttpPut("{id:int}")]
     public async Task<ActionResult<GoalDto>> Update(int planId, int id, GoalUpsertDto dto)
     {
-        var goal = await db.Goals.Include(g => g.AccountLinks).FirstOrDefaultAsync(g => g.Id == id && g.PlanId == planId);
+        var userId = this.GetUserId();
+        var goal = await db.Goals.Include(g => g.AccountLinks).FirstOrDefaultAsync(g => g.Id == id && g.PlanId == planId && g.Plan.UserId == userId);
         if (goal is null) return NotFound();
 
         goal.Name = dto.Name;
@@ -64,7 +66,8 @@ public class GoalsController(GoalsPlanningSystemDbContext db) : ControllerBase
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int planId, int id)
     {
-        var goal = await db.Goals.FirstOrDefaultAsync(g => g.Id == id && g.PlanId == planId);
+        var userId = this.GetUserId();
+        var goal = await db.Goals.FirstOrDefaultAsync(g => g.Id == id && g.PlanId == planId && g.Plan.UserId == userId);
         if (goal is null) return NotFound();
 
         db.Goals.Remove(goal);

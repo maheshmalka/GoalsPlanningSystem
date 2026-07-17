@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
-  AppBar, Box, Drawer, IconButton, List, ListItemButton, ListItemIcon, ListItemText, Toolbar, Tooltip, Typography,
-  useMediaQuery,
+  AppBar, Avatar, Box, Drawer, IconButton, List, ListItemButton, ListItemIcon, ListItemText, Menu, MenuItem,
+  Toolbar, Tooltip, Typography, useMediaQuery,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import MenuOpenIcon from "@mui/icons-material/MenuOpen";
@@ -10,6 +10,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
 import TuneIcon from "@mui/icons-material/Tune";
 import SavingsIcon from "@mui/icons-material/Savings";
+import { useAuth } from "../auth/AuthContext";
 import { palette } from "../theme";
 
 const drawerWidthExpanded = 248;
@@ -24,9 +25,18 @@ export default function Layout() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
 
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [userMenuAnchor, setUserMenuAnchor] = useState<HTMLElement | null>(null);
+
+  const handleLogout = () => {
+    setUserMenuAnchor(null);
+    signOut();
+    navigate("/login", { replace: true });
+  };
 
   // A temporary (overlay) drawer should close itself once the user picks a destination.
   useEffect(() => {
@@ -98,6 +108,22 @@ export default function Layout() {
           <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.65)", display: { xs: "none", sm: "block" } }}>
             India Financial Planning Workspace
           </Typography>
+          <Tooltip title={user?.displayName ?? ""}>
+            <IconButton onClick={(e) => setUserMenuAnchor(e.currentTarget)} sx={{ ml: 1 }} aria-label="Account menu">
+              <Avatar sx={{ width: 32, height: 32, bgcolor: palette.gold, fontSize: 14, fontWeight: 700 }}>
+                {(user?.displayName ?? "?").charAt(0).toUpperCase()}
+              </Avatar>
+            </IconButton>
+          </Tooltip>
+          <Menu anchorEl={userMenuAnchor} open={!!userMenuAnchor} onClose={() => setUserMenuAnchor(null)}>
+            <MenuItem disabled sx={{ opacity: "1 !important" }}>
+              <Box>
+                <Typography variant="body2" fontWeight={600}>{user?.displayName}</Typography>
+                <Typography variant="caption" color="text.secondary">{user?.email}</Typography>
+              </Box>
+            </MenuItem>
+            <MenuItem onClick={handleLogout}>Sign out</MenuItem>
+          </Menu>
         </Toolbar>
       </AppBar>
 

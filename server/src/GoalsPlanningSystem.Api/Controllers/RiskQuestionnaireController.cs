@@ -1,3 +1,4 @@
+using GoalsPlanningSystem.Api.Auth;
 using GoalsPlanningSystem.Api.DTOs;
 using GoalsPlanningSystem.Domain;
 using GoalsPlanningSystem.Domain.Entities;
@@ -27,7 +28,8 @@ public class RiskQuestionnaireController(GoalsPlanningSystemDbContext db) : Cont
     [HttpGet("clients/{clientId:int}/risk-questionnaire")]
     public async Task<ActionResult<RiskResultDto>> GetResult(int clientId)
     {
-        var client = await db.Clients.AsNoTracking().FirstOrDefaultAsync(c => c.Id == clientId);
+        var userId = this.GetUserId();
+        var client = await db.Clients.AsNoTracking().FirstOrDefaultAsync(c => c.Id == clientId && c.Plan.UserId == userId);
         if (client is null) return NotFound();
 
         var (min, max) = await GetScoreBoundsAsync();
@@ -42,7 +44,8 @@ public class RiskQuestionnaireController(GoalsPlanningSystemDbContext db) : Cont
     [HttpPut("clients/{clientId:int}/risk-questionnaire")]
     public async Task<ActionResult<RiskResultDto>> Submit(int clientId, RiskResponseSubmitDto dto)
     {
-        var client = await db.Clients.FirstOrDefaultAsync(c => c.Id == clientId);
+        var userId = this.GetUserId();
+        var client = await db.Clients.FirstOrDefaultAsync(c => c.Id == clientId && c.Plan.UserId == userId);
         if (client is null) return NotFound();
 
         var optionsById = await db.RiskQuestionOptions.AsNoTracking().ToDictionaryAsync(o => o.Id);

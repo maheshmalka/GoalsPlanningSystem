@@ -1,3 +1,4 @@
+using GoalsPlanningSystem.Api.Auth;
 using GoalsPlanningSystem.Api.DTOs;
 using GoalsPlanningSystem.Domain.Entities;
 using GoalsPlanningSystem.Infrastructure;
@@ -30,7 +31,8 @@ public class PlansController(GoalsPlanningSystemDbContext db) : ControllerBase
     [HttpGet]
     public async Task<ActionResult<List<PlanListItemDto>>> GetAll([FromQuery] string? search)
     {
-        var query = db.Plans.AsNoTracking().Include(p => p.Clients).AsQueryable();
+        var userId = this.GetUserId();
+        var query = db.Plans.AsNoTracking().Include(p => p.Clients).Where(p => p.UserId == userId).AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(search))
         {
@@ -44,14 +46,15 @@ public class PlansController(GoalsPlanningSystemDbContext db) : ControllerBase
     [HttpGet("{id:int}")]
     public async Task<ActionResult<PlanDetailDto>> GetById(int id)
     {
-        var plan = await db.Plans.AsNoTracking().Include(p => p.Clients).FirstOrDefaultAsync(p => p.Id == id);
+        var userId = this.GetUserId();
+        var plan = await db.Plans.AsNoTracking().Include(p => p.Clients).FirstOrDefaultAsync(p => p.Id == id && p.UserId == userId);
         return plan is null ? NotFound() : ToDetailDto(plan);
     }
 
     [HttpPost]
     public async Task<ActionResult<PlanDetailDto>> Create(PlanUpsertDto dto)
     {
-        var plan = new Plan { Name = dto.Name, InflationRatePct = dto.InflationRatePct, SimulationCount = dto.SimulationCount };
+        var plan = new Plan { Name = dto.Name, InflationRatePct = dto.InflationRatePct, SimulationCount = dto.SimulationCount, UserId = this.GetUserId() };
         db.Plans.Add(plan);
         await db.SaveChangesAsync();
         return CreatedAtAction(nameof(GetById), new { id = plan.Id }, ToDetailDto(plan));
@@ -60,7 +63,8 @@ public class PlansController(GoalsPlanningSystemDbContext db) : ControllerBase
     [HttpPut("{id:int}")]
     public async Task<ActionResult<PlanDetailDto>> Update(int id, PlanUpsertDto dto)
     {
-        var plan = await db.Plans.Include(p => p.Clients).FirstOrDefaultAsync(p => p.Id == id);
+        var userId = this.GetUserId();
+        var plan = await db.Plans.Include(p => p.Clients).FirstOrDefaultAsync(p => p.Id == id && p.UserId == userId);
         if (plan is null) return NotFound();
 
         if (dto.PrimaryClientId.HasValue && plan.Clients.All(c => c.Id != dto.PrimaryClientId.Value))
@@ -81,7 +85,8 @@ public class PlansController(GoalsPlanningSystemDbContext db) : ControllerBase
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var plan = await db.Plans.FirstOrDefaultAsync(p => p.Id == id);
+        var userId = this.GetUserId();
+        var plan = await db.Plans.FirstOrDefaultAsync(p => p.Id == id && p.UserId == userId);
         if (plan is null) return NotFound();
 
         db.Plans.Remove(plan);
@@ -92,7 +97,8 @@ public class PlansController(GoalsPlanningSystemDbContext db) : ControllerBase
     [HttpPost("{id:int}/clients")]
     public async Task<ActionResult<ClientListItemDto>> AddClient(int id, ClientUpsertDto dto)
     {
-        var plan = await db.Plans.Include(p => p.Clients).FirstOrDefaultAsync(p => p.Id == id);
+        var userId = this.GetUserId();
+        var plan = await db.Plans.Include(p => p.Clients).FirstOrDefaultAsync(p => p.Id == id && p.UserId == userId);
         if (plan is null) return NotFound();
 
         if (plan.Clients.Count >= MaxClientsPerPlan)

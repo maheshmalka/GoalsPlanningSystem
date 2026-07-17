@@ -1,3 +1,4 @@
+using GoalsPlanningSystem.Api.Auth;
 using GoalsPlanningSystem.Api.DTOs;
 using GoalsPlanningSystem.Domain.Entities;
 using GoalsPlanningSystem.Infrastructure;
@@ -15,7 +16,7 @@ public class IncomesController(GoalsPlanningSystemDbContext db) : ControllerBase
     [HttpGet]
     public async Task<ActionResult<List<IncomeDto>>> GetAll(int clientId)
     {
-        if (!await db.Clients.AnyAsync(c => c.Id == clientId)) return NotFound();
+        if (!await db.IsClientOwnedByUserAsync(clientId, this.GetUserId())) return NotFound();
         var incomes = await db.Incomes.AsNoTracking().Where(i => i.ClientId == clientId).ToListAsync();
         return incomes.Select(ToDto).ToList();
     }
@@ -23,7 +24,7 @@ public class IncomesController(GoalsPlanningSystemDbContext db) : ControllerBase
     [HttpPost]
     public async Task<ActionResult<IncomeDto>> Create(int clientId, IncomeUpsertDto dto)
     {
-        if (!await db.Clients.AnyAsync(c => c.Id == clientId)) return NotFound();
+        if (!await db.IsClientOwnedByUserAsync(clientId, this.GetUserId())) return NotFound();
 
         var income = new Income
         {
@@ -38,7 +39,8 @@ public class IncomesController(GoalsPlanningSystemDbContext db) : ControllerBase
     [HttpPut("{id:int}")]
     public async Task<ActionResult<IncomeDto>> Update(int clientId, int id, IncomeUpsertDto dto)
     {
-        var income = await db.Incomes.FirstOrDefaultAsync(i => i.Id == id && i.ClientId == clientId);
+        var userId = this.GetUserId();
+        var income = await db.Incomes.FirstOrDefaultAsync(i => i.Id == id && i.ClientId == clientId && i.Client.Plan.UserId == userId);
         if (income is null) return NotFound();
 
         income.Name = dto.Name;
@@ -55,7 +57,8 @@ public class IncomesController(GoalsPlanningSystemDbContext db) : ControllerBase
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int clientId, int id)
     {
-        var income = await db.Incomes.FirstOrDefaultAsync(i => i.Id == id && i.ClientId == clientId);
+        var userId = this.GetUserId();
+        var income = await db.Incomes.FirstOrDefaultAsync(i => i.Id == id && i.ClientId == clientId && i.Client.Plan.UserId == userId);
         if (income is null) return NotFound();
 
         db.Incomes.Remove(income);

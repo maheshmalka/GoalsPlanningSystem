@@ -1,3 +1,4 @@
+using GoalsPlanningSystem.Api.Auth;
 using GoalsPlanningSystem.Api.DTOs;
 using GoalsPlanningSystem.Domain.Entities;
 using GoalsPlanningSystem.Infrastructure;
@@ -18,7 +19,7 @@ public class AccountsController(GoalsPlanningSystemDbContext db) : ControllerBas
     [HttpGet]
     public async Task<ActionResult<List<AccountDto>>> GetAll(int clientId)
     {
-        if (!await db.Clients.AnyAsync(c => c.Id == clientId)) return NotFound();
+        if (!await db.IsClientOwnedByUserAsync(clientId, this.GetUserId())) return NotFound();
 
         var accounts = await db.Accounts.AsNoTracking()
             .Include(a => a.Allocations).ThenInclude(al => al.AssetClass)
@@ -30,7 +31,7 @@ public class AccountsController(GoalsPlanningSystemDbContext db) : ControllerBas
     [HttpPost]
     public async Task<ActionResult<AccountDto>> Create(int clientId, AccountUpsertDto dto)
     {
-        if (!await db.Clients.AnyAsync(c => c.Id == clientId)) return NotFound();
+        if (!await db.IsClientOwnedByUserAsync(clientId, this.GetUserId())) return NotFound();
 
         var account = new Account
         {
@@ -54,8 +55,9 @@ public class AccountsController(GoalsPlanningSystemDbContext db) : ControllerBas
     [HttpPut("{id:int}")]
     public async Task<ActionResult<AccountDto>> Update(int clientId, int id, AccountUpsertDto dto)
     {
+        var userId = this.GetUserId();
         var account = await db.Accounts.Include(a => a.Allocations).ThenInclude(al => al.AssetClass)
-            .FirstOrDefaultAsync(a => a.Id == id && a.ClientId == clientId);
+            .FirstOrDefaultAsync(a => a.Id == id && a.ClientId == clientId && a.Client.Plan.UserId == userId);
         if (account is null) return NotFound();
 
         account.Name = dto.Name;
@@ -78,7 +80,8 @@ public class AccountsController(GoalsPlanningSystemDbContext db) : ControllerBas
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int clientId, int id)
     {
-        var account = await db.Accounts.FirstOrDefaultAsync(a => a.Id == id && a.ClientId == clientId);
+        var userId = this.GetUserId();
+        var account = await db.Accounts.FirstOrDefaultAsync(a => a.Id == id && a.ClientId == clientId && a.Client.Plan.UserId == userId);
         if (account is null) return NotFound();
 
         // GoalAccountLink -> Account is Restrict (not Cascade), so any goal earmarks on this account
