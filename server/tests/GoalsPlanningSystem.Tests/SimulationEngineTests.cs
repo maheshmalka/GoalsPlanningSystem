@@ -65,7 +65,7 @@ public class SimulationEngineTests
                     MonthlyContribution: 0m, EmployerMatchPct: 0m, IsNps: false, NpsAnnuitizationPct: 0m, AssumedAnnuityRatePct: 0m)
             ],
             Incomes: [],
-            Expenses: [new ExpenseInput(AnnualAmount: 5_000_000m, StartYear: 2026, EndYear: null, GrowthRatePct: 7m)],
+            Expenses: [new ExpenseInput(AnnualAmount: 5_000_000m, StartYear: 2026, EndYear: null, GrowthRatePct: 7m, Category: ExpenseCategory.Essential)],
             Goals: [],
             AssetClasses: [new AssetClassAssumption(1, "Indian Equity", 12.0, 18.0)],
             Correlations: [],

@@ -44,6 +44,7 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddHttpClient();
+builder.Services.AddScoped<GoalsPlanningSystem.Api.Simulation.SimulationRequestBuilder>();
 
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
 builder.Services.Configure<OAuthOptions>(builder.Configuration.GetSection(OAuthOptions.SectionName));

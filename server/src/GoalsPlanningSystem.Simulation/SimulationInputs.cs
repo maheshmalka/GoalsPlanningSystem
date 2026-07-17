@@ -21,7 +21,7 @@ public record AccountInput(
 
 public record IncomeInput(IncomeType IncomeType, decimal AnnualAmount, int StartYear, int? EndYear, decimal AnnualGrowthRatePct);
 
-public record ExpenseInput(decimal AnnualAmount, int StartYear, int? EndYear, decimal GrowthRatePct);
+public record ExpenseInput(decimal AnnualAmount, int StartYear, int? EndYear, decimal GrowthRatePct, ExpenseCategory Category);
 
 public record GoalInput(
     int GoalId,

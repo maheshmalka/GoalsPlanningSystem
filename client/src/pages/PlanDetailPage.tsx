@@ -9,6 +9,7 @@ import {
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ShowChartIcon from "@mui/icons-material/ShowChart";
+import TipsAndUpdatesIcon from "@mui/icons-material/TipsAndUpdates";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import DeleteIcon from "@mui/icons-material/Delete";
 import {
@@ -201,6 +202,9 @@ export default function PlanDetailPage() {
               Add Second Client
             </Button>
           )}
+          <Button variant="outlined" startIcon={<TipsAndUpdatesIcon />} onClick={() => navigate(`/plans/${planId}/insights`)}>
+            AI Insights
+          </Button>
           <Button variant="contained" startIcon={<ShowChartIcon />} onClick={() => navigate(`/plans/${planId}/projections`)}>
             View Projections
           </Button>

@@ -2,8 +2,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "./client";
 import type {
   Account, AccountUpsert, AssetClass, CapitalGainsRule, ClientDetail, ClientListItem, ClientUpsert,
-  Correlation, Expense, ExpenseUpsert, Goal, GoalUpsert, Income, IncomeUpsert, Plan, PlanDetail, PlanUpsert,
-  RiskQuestion, RiskResult, SimulationResult, TaxSettingsEntry, TaxSlab,
+  Correlation, Expense, ExpenseUpsert, Goal, GoalUpsert, Income, IncomeUpsert, Plan, PlanDetail, PlanInsights,
+  PlanUpsert, RiskQuestion, RiskResult, SimulationResult, TaxSettingsEntry, TaxSlab,
 } from "./types";
 
 // --- Plans ---
@@ -220,4 +220,10 @@ export const useUpdateCapitalGainsRule = () => {
 export const useRunProjection = () =>
   useMutation({
     mutationFn: async (planId: number) => (await apiClient.post<SimulationResult>(`/plans/${planId}/projections`)).data,
+  });
+
+// --- AI Insights ---
+export const useRunInsights = () =>
+  useMutation({
+    mutationFn: async (planId: number) => (await apiClient.post<PlanInsights>(`/plans/${planId}/insights`)).data,
   });

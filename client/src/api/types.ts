@@ -241,3 +241,20 @@ export interface SimulationResult {
   fundingRatio: number | null;
   worst3MonthLossPct: number;
 }
+
+export interface Insight {
+  id: string;
+  title: string;
+  description: string;
+  baselineProbabilityOfSuccessPct: number;
+  projectedProbabilityOfSuccessPct: number;
+  probabilityDeltaPct: number;
+  baselineFundingRatio: number | null;
+  projectedFundingRatio: number | null;
+}
+
+export interface PlanInsights {
+  baselineProbabilityOfSuccessPct: number;
+  baselineFundingRatio: number | null;
+  insights: Insight[];
+}
