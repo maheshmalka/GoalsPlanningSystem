@@ -21,7 +21,14 @@ public static class DependencyInjection
         {
             services.AddDbContext<GoalsPlanningSystemDbContext, SqlServerGoalsPlanningSystemDbContext>(options =>
                 options.UseSqlServer(connectionString, sql =>
-                    sql.MigrationsHistoryTable("__EFMigrationsHistory")));
+                {
+                    sql.MigrationsHistoryTable("__EFMigrationsHistory");
+                    // Azure SQL serverless auto-pauses when idle; the first connection after a pause (or any
+                    // transient network blip) commonly fails while the database resumes. Without this, that
+                    // first failure aborts Program.cs's startup Migrate() call outright and the app never
+                    // gets a working schema.
+                    sql.EnableRetryOnFailure(maxRetryCount: 5, maxRetryDelay: TimeSpan.FromSeconds(15), errorNumbersToAdd: null);
+                }));
         }
         else
         {
