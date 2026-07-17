@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Area, Bar, CartesianGrid, ComposedChart, Legend, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis,
@@ -8,7 +7,8 @@ import {
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import { usePlan, useRunProjection } from "../api/queries";
+import { useProjection, usePlan } from "../api/queries";
+import type { GoalOutcome, YearlyProjectionBand } from "../api/types";
 import { formatInr, formatInrCompact, formatPercent } from "../utils/currency";
 import { palette } from "../theme";
 
@@ -50,15 +50,10 @@ export default function ProjectionsPage() {
   const planId = Number(id);
   const navigate = useNavigate();
   const { data: plan } = usePlan(planId);
-  const projection = useRunProjection();
-
-  useEffect(() => {
-    if (planId) projection.mutate(planId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [planId]);
+  const projection = useProjection(planId);
 
   const result = projection.data;
-  const bandData = result?.projectionBands.map((b) => ({
+  const bandData = result?.projectionBands.map((b: YearlyProjectionBand) => ({
     year: b.year,
     base: b.worstCase,
     band: b.bestCase - b.worstCase,
@@ -78,12 +73,12 @@ export default function ProjectionsPage() {
           </Button>
           <Typography variant="h4">Projections{plan ? ` — ${plan.name}` : ""}</Typography>
         </Stack>
-        <Button variant="outlined" startIcon={<RefreshIcon />} disabled={projection.isPending} onClick={() => projection.mutate(planId)}>
+        <Button variant="outlined" startIcon={<RefreshIcon />} disabled={projection.isFetching} onClick={() => projection.refetch()}>
           Re-run
         </Button>
       </Stack>
 
-      {projection.isPending && (
+      {projection.isFetching && (
         <Box display="flex" flexDirection="column" alignItems="center" gap={2} mt={8}>
           <CircularProgress />
           <Typography color="text.secondary">Running Monte Carlo simulation…</Typography>
@@ -139,7 +134,7 @@ export default function ProjectionsPage() {
                   Probability of Achieving Each Goal
                 </Typography>
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                  {result.goalOutcomes.map((g) => (
+                  {result.goalOutcomes.map((g: GoalOutcome) => (
                     <Chip
                       key={g.goalId}
                       label={`${g.name}: ${formatPercent(g.probabilityOfSuccessPct, 0)}`}

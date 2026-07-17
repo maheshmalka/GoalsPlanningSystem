@@ -35,6 +35,7 @@ export const useUpdatePlan = (id: number) => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["plans"] });
       qc.invalidateQueries({ queryKey: ["plans", id] });
+      invalidateSimulationCaches(qc);
     },
   });
 };
@@ -58,6 +59,7 @@ export const useAddClientToPlan = (planId: number) => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["plans"] });
       qc.invalidateQueries({ queryKey: ["plans", planId] });
+      invalidateSimulationCaches(qc);
     },
   });
 };
@@ -77,6 +79,7 @@ export const useUpdateClient = (id: number) => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["plans"] });
       qc.invalidateQueries({ queryKey: ["clients", id] });
+      invalidateSimulationCaches(qc);
     },
   });
 };
@@ -88,6 +91,7 @@ export const useDeleteClient = (planId: number) => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["plans"] });
       qc.invalidateQueries({ queryKey: ["plans", planId] });
+      invalidateSimulationCaches(qc);
     },
   });
 };
@@ -105,18 +109,27 @@ function useSubResource<TItem, TUpsert>(basePath: string, key: string, enabled =
 
   const create = useMutation({
     mutationFn: async (dto: TUpsert) => (await apiClient.post<TItem>(basePath, dto)).data,
-    onSuccess: () => qc.invalidateQueries({ queryKey: listKey }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: listKey });
+      invalidateSimulationCaches(qc);
+    },
   });
 
   const update = useMutation({
     mutationFn: async ({ id, dto }: { id: number; dto: TUpsert }) =>
       (await apiClient.put<TItem>(`${basePath}/${id}`, dto)).data,
-    onSuccess: () => qc.invalidateQueries({ queryKey: listKey }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: listKey });
+      invalidateSimulationCaches(qc);
+    },
   });
 
   const remove = useMutation({
     mutationFn: async (id: number) => apiClient.delete(`${basePath}/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: listKey }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: listKey });
+      invalidateSimulationCaches(qc);
+    },
   });
 
   return { list, create, update, remove };
@@ -167,7 +180,10 @@ export const useUpdateAssetClass = () => {
   return useMutation({
     mutationFn: async ({ id, dto }: { id: number; dto: { expectedAnnualReturnPct: number; annualVolatilityPct: number } }) =>
       (await apiClient.put<AssetClass>(`/global-settings/asset-classes/${id}`, dto)).data,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["asset-classes"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["asset-classes"] });
+      invalidateSimulationCaches(qc);
+    },
   });
 };
 
@@ -178,7 +194,10 @@ export const useUpdateCorrelation = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (dto: Correlation) => (await apiClient.put<Correlation>("/global-settings/correlations", dto)).data,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["correlations"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["correlations"] });
+      invalidateSimulationCaches(qc);
+    },
   });
 };
 
@@ -189,7 +208,10 @@ export const useUpdateTaxSlab = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (dto: TaxSlab) => (await apiClient.put<TaxSlab>(`/global-settings/tax-slabs/${dto.id}`, dto)).data,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["tax-slabs"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tax-slabs"] });
+      invalidateSimulationCaches(qc);
+    },
   });
 };
 
@@ -200,7 +222,10 @@ export const useUpdateTaxSettings = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (dto: TaxSettingsEntry) => (await apiClient.put<TaxSettingsEntry>(`/global-settings/tax-settings/${dto.regime}`, dto)).data,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["tax-settings"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tax-settings"] });
+      invalidateSimulationCaches(qc);
+    },
   });
 };
 
@@ -212,18 +237,43 @@ export const useUpdateCapitalGainsRule = () => {
   return useMutation({
     mutationFn: async (dto: CapitalGainsRule) =>
       (await apiClient.put<CapitalGainsRule>(`/global-settings/capital-gains-rules/${dto.assetCategory}`, dto)).data,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["cgt-rules"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["cgt-rules"] });
+      invalidateSimulationCaches(qc);
+    },
   });
 };
 
 // --- Projections ---
-export const useRunProjection = () =>
-  useMutation({
-    mutationFn: async (planId: number) => (await apiClient.post<SimulationResult>(`/plans/${planId}/projections`)).data,
+// A POST because it's a computation, not a plain resource fetch, but the result is cached like any
+// other query: staleTime: Infinity means it's only ever recomputed when something that could change
+// the outcome actually changes (see SIMULATION_AFFECTING_KEYS below) or the user hits Re-run. Without
+// this, every visit to the page would re-run the (randomized, non-deterministic) Monte Carlo engine
+// and show a slightly different result even when nothing about the plan changed.
+export const useProjection = (planId: number) =>
+  useQuery({
+    queryKey: ["projections", planId],
+    queryFn: async () => (await apiClient.post<SimulationResult>(`/plans/${planId}/projections`)).data,
+    enabled: !!planId,
+    staleTime: Infinity,
+    retry: false,
   });
 
 // --- AI Insights ---
-export const useRunInsights = () =>
-  useMutation({
-    mutationFn: async (planId: number) => (await apiClient.post<PlanInsights>(`/plans/${planId}/insights`)).data,
+export const useInsights = (planId: number) =>
+  useQuery({
+    queryKey: ["insights", planId],
+    queryFn: async () => (await apiClient.post<PlanInsights>(`/plans/${planId}/insights`)).data,
+    enabled: !!planId,
+    staleTime: Infinity,
+    retry: false,
   });
+
+/** Every mutation that can change a plan's simulation inputs (accounts, income, expenses, goals,
+ * client demographics/tax, plan settings, or global asset-class/tax assumptions) invalidates these
+ * broadly rather than per-plan, since several of those mutations (global settings, client-scoped
+ * accounts/incomes) don't know which plan they affect without extra threading. */
+function invalidateSimulationCaches(qc: ReturnType<typeof useQueryClient>) {
+  qc.invalidateQueries({ queryKey: ["projections"] });
+  qc.invalidateQueries({ queryKey: ["insights"] });
+}

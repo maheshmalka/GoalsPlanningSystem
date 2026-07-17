@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Alert, Box, Button, Card, CardContent, Chip, CircularProgress, Stack, Typography,
@@ -7,7 +6,8 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import TipsAndUpdatesIcon from "@mui/icons-material/TipsAndUpdates";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
-import { usePlan, useRunInsights } from "../api/queries";
+import { usePlan, useInsights } from "../api/queries";
+import type { Insight } from "../api/types";
 import { formatPercent } from "../utils/currency";
 import { palette } from "../theme";
 
@@ -16,12 +16,7 @@ export default function InsightsPage() {
   const planId = Number(id);
   const navigate = useNavigate();
   const { data: plan } = usePlan(planId);
-  const insights = useRunInsights();
-
-  useEffect(() => {
-    if (planId) insights.mutate(planId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [planId]);
+  const insights = useInsights(planId);
 
   const result = insights.data;
 
@@ -34,7 +29,7 @@ export default function InsightsPage() {
           </Button>
           <Typography variant="h4">AI Insights{plan ? ` — ${plan.name}` : ""}</Typography>
         </Stack>
-        <Button variant="outlined" startIcon={<RefreshIcon />} disabled={insights.isPending} onClick={() => insights.mutate(planId)}>
+        <Button variant="outlined" startIcon={<RefreshIcon />} disabled={insights.isFetching} onClick={() => insights.refetch()}>
           Re-run
         </Button>
       </Stack>
@@ -45,7 +40,7 @@ export default function InsightsPage() {
         figures on the Projections page after actually applying a change.
       </Typography>
 
-      {insights.isPending && (
+      {insights.isFetching && (
         <Box display="flex" flexDirection="column" alignItems="center" gap={2} mt={8}>
           <CircularProgress />
           <Typography color="text.secondary">Evaluating scenarios…</Typography>
@@ -83,7 +78,7 @@ export default function InsightsPage() {
           )}
 
           <Stack spacing={2}>
-            {result.insights.map((insight) => {
+            {result.insights.map((insight: Insight) => {
               const improved = insight.probabilityDeltaPct > 0.05;
               const noChange = Math.abs(insight.probabilityDeltaPct) <= 0.05;
               return (
