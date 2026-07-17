@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using GoalsPlanningSystem.Api.Auth;
@@ -110,6 +111,13 @@ public class AuthController(
     [HttpPost("microsoft")]
     public async Task<ActionResult<AuthResultDto>> MicrosoftLogin(MicrosoftLoginDto dto)
     {
+        // Calling Graph below proves the token is a genuine, unexpired Microsoft-issued token, but not
+        // that it was issued to *this* app - any app a user has granted User.Read to could otherwise be
+        // replayed here. The audience/client claim is checked first, before that call, to close that gap.
+        // Safe to read without re-verifying the signature: by the time this token reaches Graph it will
+        // already have been cryptographically validated there, and this check runs against the same token.
+        if (!TokenWasIssuedToThisApp(dto.AccessToken)) return Unauthorized("Invalid Microsoft token.");
+
         var client = httpClientFactory.CreateClient();
         var request = new HttpRequestMessage(HttpMethod.Get, "https://graph.microsoft.com/v1.0/me");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", dto.AccessToken);
@@ -130,6 +138,21 @@ public class AuthController(
     }
 
     private record MicrosoftGraphProfile(string Id, string? Mail, string? UserPrincipalName, string? DisplayName);
+
+    private bool TokenWasIssuedToThisApp(string accessToken)
+    {
+        try
+        {
+            var token = new JwtSecurityTokenHandler().ReadJwtToken(accessToken);
+            // v2.0 tokens use "azp", v1.0 tokens use "appid" - MSAL's default authority issues v2.0.
+            var issuedTo = token.Claims.FirstOrDefault(c => c.Type is "azp" or "appid")?.Value;
+            return string.Equals(issuedTo, oauthOptions.Value.MicrosoftClientId, StringComparison.OrdinalIgnoreCase);
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
+    }
 
     /// <summary>Looks up by (Provider, ProviderUserId) first (the stable identity), falling back to
     /// matching an existing local account by email so a user who registered with a password and later
