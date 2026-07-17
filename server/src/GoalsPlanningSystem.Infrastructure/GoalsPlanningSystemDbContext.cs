@@ -40,10 +40,11 @@ public abstract class GoalsPlanningSystemDbContext(DbContextOptions options) : D
             e.HasMany(p => p.Clients).WithOne(c => c.Plan).HasForeignKey(c => c.PlanId).OnDelete(DeleteBehavior.Cascade);
             e.HasMany(p => p.Expenses).WithOne(x => x.Plan).HasForeignKey(x => x.PlanId).OnDelete(DeleteBehavior.Cascade);
             e.HasMany(p => p.Goals).WithOne(g => g.Plan).HasForeignKey(g => g.PlanId).OnDelete(DeleteBehavior.Cascade);
-            // Independent of the Clients collection above (different FK, opposite direction), so this
-            // doesn't create the multi-cascade-path conflict SQL Server rejects: deleting a Client just
-            // nulls this column rather than cascading back into Plan.
-            e.HasOne(p => p.PrimaryClient).WithMany().HasForeignKey(p => p.PrimaryClientId).OnDelete(DeleteBehavior.SetNull);
+            // Restrict, not SetNull: Client.PlanId -> Plan (cascade) and Plan.PrimaryClientId -> Client form
+            // a cycle between the same two tables, and SQL Server rejects that outright as soon as either
+            // side cascades, regardless of what the other side's specific action is. PrimaryClientId is
+            // cleared explicitly in ClientsController before a client is deleted instead.
+            e.HasOne(p => p.PrimaryClient).WithMany().HasForeignKey(p => p.PrimaryClientId).OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<Client>(e =>

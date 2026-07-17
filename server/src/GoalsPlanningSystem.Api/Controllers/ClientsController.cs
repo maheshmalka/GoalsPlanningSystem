@@ -48,11 +48,15 @@ public class ClientsController(GoalsPlanningSystemDbContext db) : ControllerBase
         if (client is null) return NotFound();
 
         var plan = await db.Plans.Include(p => p.Clients).FirstAsync(p => p.Id == client.PlanId);
-
-        // Captured before Remove()/SaveChanges(): the PrimaryClientId -> Client relationship is configured
-        // SetNull, so EF nulls plan.PrimaryClientId in memory as part of saving the delete itself, before
-        // this method ever gets to check it.
         var wasPrimary = plan.PrimaryClientId == id;
+
+        // PrimaryClientId -> Client is Restrict (not SetNull, to avoid a cascade cycle with Client.PlanId ->
+        // Plan), so it must be cleared before the referenced client row can be deleted at all.
+        if (wasPrimary)
+        {
+            plan.PrimaryClientId = null;
+            await db.SaveChangesAsync();
+        }
 
         db.Clients.Remove(client);
         await db.SaveChangesAsync();

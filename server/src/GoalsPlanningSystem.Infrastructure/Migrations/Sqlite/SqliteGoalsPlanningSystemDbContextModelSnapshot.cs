@@ -662,7 +662,7 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.Sqlite
                     b.HasOne("GoalsPlanningSystem.Domain.Entities.Client", "PrimaryClient")
                         .WithMany()
                         .HasForeignKey("PrimaryClientId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("PrimaryClient");
                 });
