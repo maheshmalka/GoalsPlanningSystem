@@ -10,6 +10,7 @@ namespace GoalsPlanningSystem.Infrastructure;
 /// </summary>
 public abstract class GoalsPlanningSystemDbContext(DbContextOptions options) : DbContext(options)
 {
+    public DbSet<Plan> Plans => Set<Plan>();
     public DbSet<Client> Clients => Set<Client>();
     public DbSet<Account> Accounts => Set<Account>();
     public DbSet<AccountAllocation> AccountAllocations => Set<AccountAllocation>();
@@ -20,7 +21,6 @@ public abstract class GoalsPlanningSystemDbContext(DbContextOptions options) : D
     public DbSet<RiskQuestion> RiskQuestions => Set<RiskQuestion>();
     public DbSet<RiskQuestionOption> RiskQuestionOptions => Set<RiskQuestionOption>();
     public DbSet<RiskQuestionnaireResponse> RiskQuestionnaireResponses => Set<RiskQuestionnaireResponse>();
-    public DbSet<GlobalSettings> GlobalSettings => Set<GlobalSettings>();
     public DbSet<AssetClass> AssetClasses => Set<AssetClass>();
     public DbSet<AssetClassCorrelation> AssetClassCorrelations => Set<AssetClassCorrelation>();
     public DbSet<TaxSlab> TaxSlabs => Set<TaxSlab>();
@@ -34,13 +34,23 @@ public abstract class GoalsPlanningSystemDbContext(DbContextOptions options) : D
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Plan>(e =>
+        {
+            e.Property(p => p.Name).IsRequired().HasMaxLength(200);
+            e.HasMany(p => p.Clients).WithOne(c => c.Plan).HasForeignKey(c => c.PlanId).OnDelete(DeleteBehavior.Cascade);
+            e.HasMany(p => p.Expenses).WithOne(x => x.Plan).HasForeignKey(x => x.PlanId).OnDelete(DeleteBehavior.Cascade);
+            e.HasMany(p => p.Goals).WithOne(g => g.Plan).HasForeignKey(g => g.PlanId).OnDelete(DeleteBehavior.Cascade);
+            // Independent of the Clients collection above (different FK, opposite direction), so this
+            // doesn't create the multi-cascade-path conflict SQL Server rejects: deleting a Client just
+            // nulls this column rather than cascading back into Plan.
+            e.HasOne(p => p.PrimaryClient).WithMany().HasForeignKey(p => p.PrimaryClientId).OnDelete(DeleteBehavior.SetNull);
+        });
+
         modelBuilder.Entity<Client>(e =>
         {
             e.Property(c => c.Name).IsRequired().HasMaxLength(200);
             e.HasMany(c => c.Accounts).WithOne(a => a.Client).HasForeignKey(a => a.ClientId).OnDelete(DeleteBehavior.Cascade);
             e.HasMany(c => c.Incomes).WithOne(i => i.Client).HasForeignKey(i => i.ClientId).OnDelete(DeleteBehavior.Cascade);
-            e.HasMany(c => c.Expenses).WithOne(x => x.Client).HasForeignKey(x => x.ClientId).OnDelete(DeleteBehavior.Cascade);
-            e.HasMany(c => c.Goals).WithOne(g => g.Client).HasForeignKey(g => g.ClientId).OnDelete(DeleteBehavior.Cascade);
             e.HasMany(c => c.RiskQuestionnaireResponses).WithOne(r => r.Client).HasForeignKey(r => r.ClientId).OnDelete(DeleteBehavior.Cascade);
         });
 
@@ -49,8 +59,8 @@ public abstract class GoalsPlanningSystemDbContext(DbContextOptions options) : D
             e.Property(a => a.Name).IsRequired().HasMaxLength(200);
             e.HasMany(a => a.Allocations).WithOne(al => al.Account).HasForeignKey(al => al.AccountId).OnDelete(DeleteBehavior.Cascade);
             // Restrict, not Cascade: GoalAccountLink already cascades from Goal, and SQL Server (unlike
-            // SQLite) rejects a table with two cascade paths back to the same ancestor (Client). Accounts
-            // with active goal links are cleaned up explicitly in AccountsController before deletion.
+            // SQLite) rejects a table with two cascade paths back to the same ancestor. Accounts with
+            // active goal links are cleaned up explicitly in AccountsController before deletion.
             e.HasMany(a => a.GoalLinks).WithOne(gl => gl.Account).HasForeignKey(gl => gl.AccountId).OnDelete(DeleteBehavior.Restrict);
         });
 

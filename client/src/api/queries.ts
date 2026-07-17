@@ -2,14 +2,67 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "./client";
 import type {
   Account, AccountUpsert, AssetClass, CapitalGainsRule, ClientDetail, ClientListItem, ClientUpsert,
-  Correlation, Expense, ExpenseUpsert, GlobalSettings, Goal, GoalUpsert, Income, IncomeUpsert,
+  Correlation, Expense, ExpenseUpsert, Goal, GoalUpsert, Income, IncomeUpsert, Plan, PlanDetail, PlanUpsert,
   RiskQuestion, RiskResult, SimulationResult, TaxSettingsEntry, TaxSlab,
 } from "./types";
 
-// --- Clients ---
-export const useClients = () =>
-  useQuery({ queryKey: ["clients"], queryFn: async () => (await apiClient.get<ClientListItem[]>("/clients")).data });
+// --- Plans ---
+export const usePlans = (search?: string) =>
+  useQuery({
+    queryKey: ["plans", search ?? ""],
+    queryFn: async () => (await apiClient.get<Plan[]>("/plans", { params: search ? { search } : undefined })).data,
+  });
 
+export const usePlan = (id: number) =>
+  useQuery({
+    queryKey: ["plans", id],
+    queryFn: async () => (await apiClient.get<PlanDetail>(`/plans/${id}`)).data,
+    enabled: !!id,
+  });
+
+export const useCreatePlan = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (dto: PlanUpsert) => (await apiClient.post<PlanDetail>("/plans", dto)).data,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["plans"] }),
+  });
+};
+
+export const useUpdatePlan = (id: number) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (dto: PlanUpsert) => (await apiClient.put<PlanDetail>(`/plans/${id}`, dto)).data,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["plans"] });
+      qc.invalidateQueries({ queryKey: ["plans", id] });
+    },
+  });
+};
+
+export const useDeletePlan = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => apiClient.delete(`/plans/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["plans"] }),
+  });
+};
+
+/** Plain (non-hook) call for use outside component render, e.g. sequencing "create plan, then add its first client." */
+export const addClientToPlan = async (planId: number, dto: ClientUpsert) =>
+  (await apiClient.post<ClientListItem>(`/plans/${planId}/clients`, dto)).data;
+
+export const useAddClientToPlan = (planId: number) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (dto: ClientUpsert) => addClientToPlan(planId, dto),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["plans"] });
+      qc.invalidateQueries({ queryKey: ["plans", planId] });
+    },
+  });
+};
+
+// --- Clients (individual read/update/delete; creation happens via useAddClientToPlan) ---
 export const useClient = (id: number) =>
   useQuery({
     queryKey: ["clients", id],
@@ -17,67 +70,69 @@ export const useClient = (id: number) =>
     enabled: !!id,
   });
 
-export const useCreateClient = () => {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (dto: ClientUpsert) => (await apiClient.post<ClientDetail>("/clients", dto)).data,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["clients"] }),
-  });
-};
-
 export const useUpdateClient = (id: number) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (dto: ClientUpsert) => (await apiClient.put<ClientDetail>(`/clients/${id}`, dto)).data,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["clients"] });
+      qc.invalidateQueries({ queryKey: ["plans"] });
       qc.invalidateQueries({ queryKey: ["clients", id] });
     },
   });
 };
 
-export const useDeleteClient = () => {
+export const useDeleteClient = (planId: number) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: number) => apiClient.delete(`/clients/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["clients"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["plans"] });
+      qc.invalidateQueries({ queryKey: ["plans", planId] });
+    },
   });
 };
 
-// --- Generic factory for client sub-resources (Accounts/Incomes/Expenses/Goals) ---
-function useSubResource<TItem, TUpsert>(clientId: number, resource: string, key: string) {
+// --- Generic factory for nested sub-resources, keyed off an arbitrary base path ---
+function useSubResource<TItem, TUpsert>(basePath: string, key: string, enabled = true) {
   const qc = useQueryClient();
-  const listKey = [key, clientId];
+  const listKey = [key, basePath];
 
   const list = useQuery({
     queryKey: listKey,
-    queryFn: async () => (await apiClient.get<TItem[]>(`/clients/${clientId}/${resource}`)).data,
-    enabled: !!clientId,
+    queryFn: async () => (await apiClient.get<TItem[]>(basePath)).data,
+    enabled,
   });
 
   const create = useMutation({
-    mutationFn: async (dto: TUpsert) => (await apiClient.post<TItem>(`/clients/${clientId}/${resource}`, dto)).data,
+    mutationFn: async (dto: TUpsert) => (await apiClient.post<TItem>(basePath, dto)).data,
     onSuccess: () => qc.invalidateQueries({ queryKey: listKey }),
   });
 
   const update = useMutation({
     mutationFn: async ({ id, dto }: { id: number; dto: TUpsert }) =>
-      (await apiClient.put<TItem>(`/clients/${clientId}/${resource}/${id}`, dto)).data,
+      (await apiClient.put<TItem>(`${basePath}/${id}`, dto)).data,
     onSuccess: () => qc.invalidateQueries({ queryKey: listKey }),
   });
 
   const remove = useMutation({
-    mutationFn: async (id: number) => apiClient.delete(`/clients/${clientId}/${resource}/${id}`),
+    mutationFn: async (id: number) => apiClient.delete(`${basePath}/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: listKey }),
   });
 
   return { list, create, update, remove };
 }
 
-export const useAccounts = (clientId: number) => useSubResource<Account, AccountUpsert>(clientId, "accounts", "accounts");
-export const useIncomes = (clientId: number) => useSubResource<Income, IncomeUpsert>(clientId, "incomes", "incomes");
-export const useExpenses = (clientId: number) => useSubResource<Expense, ExpenseUpsert>(clientId, "expenses", "expenses");
-export const useGoals = (clientId: number) => useSubResource<Goal, GoalUpsert>(clientId, "goals", "goals");
+// Accounts and Income are individually owned by a client.
+export const useAccounts = (clientId: number) =>
+  useSubResource<Account, AccountUpsert>(`/clients/${clientId}/accounts`, "accounts", !!clientId);
+export const useIncomes = (clientId: number) =>
+  useSubResource<Income, IncomeUpsert>(`/clients/${clientId}/incomes`, "incomes", !!clientId);
+
+// Expenses and Goals are shared at the plan (household) level.
+export const useExpenses = (planId: number) =>
+  useSubResource<Expense, ExpenseUpsert>(`/plans/${planId}/expenses`, "expenses", !!planId);
+export const useGoals = (planId: number) =>
+  useSubResource<Goal, GoalUpsert>(`/plans/${planId}/goals`, "goals", !!planId);
 
 // --- Risk questionnaire ---
 export const useRiskQuestions = () =>
@@ -98,23 +153,12 @@ export const useSubmitRiskQuestionnaire = (clientId: number) => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["risk-result", clientId] });
       qc.invalidateQueries({ queryKey: ["clients", clientId] });
-      qc.invalidateQueries({ queryKey: ["clients"] });
+      qc.invalidateQueries({ queryKey: ["plans"] });
     },
   });
 };
 
-// --- Global settings ---
-export const useGlobalSettings = () =>
-  useQuery({ queryKey: ["global-settings"], queryFn: async () => (await apiClient.get<GlobalSettings>("/global-settings")).data });
-
-export const useUpdateGlobalSettings = () => {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (dto: GlobalSettings) => (await apiClient.put<GlobalSettings>("/global-settings", dto)).data,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["global-settings"] }),
-  });
-};
-
+// --- Global settings (reference data shared across all plans) ---
 export const useAssetClasses = () =>
   useQuery({ queryKey: ["asset-classes"], queryFn: async () => (await apiClient.get<AssetClass[]>("/global-settings/asset-classes")).data });
 
@@ -175,5 +219,5 @@ export const useUpdateCapitalGainsRule = () => {
 // --- Projections ---
 export const useRunProjection = () =>
   useMutation({
-    mutationFn: async (clientId: number) => (await apiClient.post<SimulationResult>(`/clients/${clientId}/projections`)).data,
+    mutationFn: async (planId: number) => (await apiClient.post<SimulationResult>(`/plans/${planId}/projections`)).data,
   });

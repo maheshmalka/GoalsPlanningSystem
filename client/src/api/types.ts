@@ -40,6 +40,23 @@ export interface ClientDetail {
 
 export type ClientUpsert = Omit<ClientDetail, "id" | "riskScore" | "riskProfile">;
 
+export interface Plan {
+  id: number;
+  name: string;
+  clients: ClientListItem[];
+}
+
+export interface PlanDetail {
+  id: number;
+  name: string;
+  inflationRatePct: number;
+  simulationCount: number;
+  primaryClientId: number | null;
+  clients: ClientListItem[];
+}
+
+export type PlanUpsert = Omit<PlanDetail, "id" | "clients">;
+
 export interface Allocation {
   assetClassId: number;
   assetClassName: string;
@@ -93,7 +110,7 @@ export type IncomeUpsert = Omit<Income, "id" | "clientId">;
 
 export interface Expense {
   id: number;
-  clientId: number;
+  planId: number;
   name: string;
   category: ExpenseCategory;
   annualAmount: number;
@@ -102,11 +119,11 @@ export interface Expense {
   growthRateOverridePct: number | null;
 }
 
-export type ExpenseUpsert = Omit<Expense, "id" | "clientId">;
+export type ExpenseUpsert = Omit<Expense, "id" | "planId">;
 
 export interface Goal {
   id: number;
-  clientId: number;
+  planId: number;
   name: string;
   goalType: GoalType;
   targetAmount: number;
@@ -118,7 +135,7 @@ export interface Goal {
   linkedAccountIds: number[];
 }
 
-export type GoalUpsert = Omit<Goal, "id" | "clientId">;
+export type GoalUpsert = Omit<Goal, "id" | "planId">;
 
 export interface RiskOption {
   id: number;
@@ -141,11 +158,6 @@ export interface RiskResult {
   scorePercentage: number;
   computedProfile: RiskProfile;
   override: RiskProfile | null;
-}
-
-export interface GlobalSettings {
-  inflationRatePct: number;
-  simulationCount: number;
 }
 
 export interface AssetClass {

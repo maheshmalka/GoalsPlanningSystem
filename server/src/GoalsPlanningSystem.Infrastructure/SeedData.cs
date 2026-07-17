@@ -12,11 +12,6 @@ public static class SeedData
 {
     public static async Task SeedAsync(GoalsPlanningSystemDbContext context)
     {
-        if (!context.GlobalSettings.Any())
-        {
-            context.GlobalSettings.Add(new GlobalSettings { InflationRatePct = 7m, SimulationCount = 2000 });
-        }
-
         if (!context.AssetClasses.Any())
         {
             var indianEquity = new AssetClass { Name = "Indian Equity", ExpectedAnnualReturnPct = 12m, AnnualVolatilityPct = 18m };

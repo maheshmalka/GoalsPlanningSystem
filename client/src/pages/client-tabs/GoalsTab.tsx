@@ -9,7 +9,7 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { useAccounts, useGoals } from "../../api/queries";
+import { useGoals } from "../../api/queries";
 import { formatInr } from "../../utils/currency";
 import { FormTextField } from "../../components/FormTextField";
 import { goalSchema, type GoalFormValues } from "../../validation/schemas";
@@ -20,14 +20,18 @@ const goalTypes = [
 ];
 const priorities = ["Essential", "Important", "Aspirational"];
 
+export interface LinkableAccount {
+  id: number;
+  label: string;
+}
+
 function defaultValues(): GoalFormValues {
   const year = new Date().getFullYear();
   return { name: "", goalType: "Retirement", targetAmount: 0, priority: "Important", startYear: year + 1, endYear: year + 1, isRecurring: false, growthRateOverridePct: null, linkedAccountIds: [] };
 }
 
-export default function GoalsTab({ clientId, accountsClientId }: { clientId: number; accountsClientId: number }) {
-  const { list, create, update, remove } = useGoals(clientId);
-  const { list: accountsList } = useAccounts(accountsClientId);
+export default function GoalsTab({ planId, accounts }: { planId: number; accounts: LinkableAccount[] }) {
+  const { list, create, update, remove } = useGoals(planId);
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const { control, handleSubmit, reset, watch, setValue } = useForm<z.input<typeof goalSchema>, any, GoalFormValues>({
@@ -103,7 +107,7 @@ export default function GoalsTab({ clientId, accountsClientId }: { clientId: num
                 ) : (
                   <Stack direction="row" spacing={0.5} flexWrap="wrap">
                     {g.linkedAccountIds.map((id) => (
-                      <Chip key={id} size="small" label={accountsList.data?.find((a) => a.id === id)?.name ?? id} />
+                      <Chip key={id} size="small" label={accounts.find((a) => a.id === id)?.label ?? id} />
                     ))}
                   </Stack>
                 )}
@@ -177,14 +181,14 @@ export default function GoalsTab({ clientId, accountsClientId }: { clientId: num
 
             <Typography variant="subtitle2">Earmark specific accounts (optional — otherwise funded from the general pool)</Typography>
             <Stack>
-              {accountsList.data?.map((a) => (
+              {accounts.map((a) => (
                 <FormControlLabel
                   key={a.id}
                   control={<Checkbox checked={linkedAccountIds.includes(a.id)} onChange={() => toggleAccount(a.id)} />}
-                  label={a.name}
+                  label={a.label}
                 />
               ))}
-              {accountsList.data?.length === 0 && (
+              {accounts.length === 0 && (
                 <Typography variant="body2" color="text.secondary">No accounts yet.</Typography>
               )}
             </Stack>

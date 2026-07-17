@@ -8,17 +8,20 @@ import {
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import { useClient, useRunProjection } from "../api/queries";
+import { usePlan, useRunProjection } from "../api/queries";
 import { formatInr, formatInrCompact, formatPercent } from "../utils/currency";
+import { palette } from "../theme";
 
 const colors = {
-  band: "#9ec5f4",
-  average: "#2a78d6",
-  income: "#1baf7a",
-  expense: "#e34948",
-  net: "#4a3aa7",
-  grid: "#e1e0d9",
-  axis: "#898781",
+  band: "#C7D3DE",
+  worst: palette.error,
+  average: palette.navy,
+  best: palette.success,
+  income: palette.success,
+  expense: palette.error,
+  net: palette.gold,
+  grid: palette.border,
+  axis: palette.textSecondary,
 };
 
 function StatTile({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: "good" | "warning" | "critical" }) {
@@ -44,15 +47,15 @@ function StatTile({ label, value, sub, tone }: { label: string; value: string; s
 
 export default function ProjectionsPage() {
   const { id } = useParams();
-  const clientId = Number(id);
+  const planId = Number(id);
   const navigate = useNavigate();
-  const { data: client } = useClient(clientId);
+  const { data: plan } = usePlan(planId);
   const projection = useRunProjection();
 
   useEffect(() => {
-    if (clientId) projection.mutate(clientId);
+    if (planId) projection.mutate(planId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clientId]);
+  }, [planId]);
 
   const result = projection.data;
   const bandData = result?.projectionBands.map((b) => ({
@@ -70,12 +73,12 @@ export default function ProjectionsPage() {
     <Box>
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
         <Stack direction="row" spacing={1} alignItems="center">
-          <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(`/clients/${clientId}`)}>
+          <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(`/plans/${planId}`)}>
             Back
           </Button>
-          <Typography variant="h4">Projections{client ? ` — ${client.name}` : ""}</Typography>
+          <Typography variant="h4">Projections{plan ? ` — ${plan.name}` : ""}</Typography>
         </Stack>
-        <Button variant="outlined" startIcon={<RefreshIcon />} disabled={projection.isPending} onClick={() => projection.mutate(clientId)}>
+        <Button variant="outlined" startIcon={<RefreshIcon />} disabled={projection.isPending} onClick={() => projection.mutate(planId)}>
           Re-run
         </Button>
       </Stack>
@@ -164,8 +167,10 @@ export default function ProjectionsPage() {
                   />
                   <Legend />
                   <Area dataKey="base" stackId="band" stroke="none" fill="transparent" legendType="none" />
-                  <Area dataKey="band" stackId="band" stroke="none" fill={colors.band} fillOpacity={0.6} name="Best–Worst Range" />
-                  <Line dataKey="averageCase" stroke={colors.average} strokeWidth={2} dot={false} name="Average Case" />
+                  <Area dataKey="band" stackId="band" stroke="none" fill={colors.band} fillOpacity={0.5} name="Best–Worst Range" legendType="none" />
+                  <Line dataKey="worstCase" stroke={colors.worst} strokeWidth={2} strokeDasharray="5 3" dot={false} name="Worst Case" />
+                  <Line dataKey="averageCase" stroke={colors.average} strokeWidth={2.5} dot={false} name="Average Case" />
+                  <Line dataKey="bestCase" stroke={colors.best} strokeWidth={2} strokeDasharray="5 3" dot={false} name="Best Case" />
                 </ComposedChart>
               </ResponsiveContainer>
             </CardContent>

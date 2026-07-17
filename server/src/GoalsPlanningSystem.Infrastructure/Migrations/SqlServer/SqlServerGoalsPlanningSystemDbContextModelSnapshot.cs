@@ -218,6 +218,9 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("PlanId")
+                        .HasColumnType("int");
+
                     b.Property<int>("RetirementAge")
                         .HasColumnType("int");
 
@@ -242,6 +245,8 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
 
                     b.HasKey("Id");
 
+                    b.HasIndex("PlanId");
+
                     b.ToTable("Clients");
                 });
 
@@ -260,9 +265,6 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
                     b.Property<int>("Category")
                         .HasColumnType("int");
 
-                    b.Property<int>("ClientId")
-                        .HasColumnType("int");
-
                     b.Property<int?>("EndYear")
                         .HasColumnType("int");
 
@@ -274,34 +276,17 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("PlanId")
+                        .HasColumnType("int");
+
                     b.Property<int>("StartYear")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ClientId");
+                    b.HasIndex("PlanId");
 
                     b.ToTable("Expenses");
-                });
-
-            modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.GlobalSettings", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("InflationRatePct")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<int>("SimulationCount")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("GlobalSettings");
                 });
 
             modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.Goal", b =>
@@ -311,9 +296,6 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ClientId")
-                        .HasColumnType("int");
 
                     b.Property<int>("EndYear")
                         .HasColumnType("int");
@@ -333,6 +315,9 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<int>("PlanId")
+                        .HasColumnType("int");
+
                     b.Property<int>("Priority")
                         .HasColumnType("int");
 
@@ -345,7 +330,7 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ClientId");
+                    b.HasIndex("PlanId");
 
                     b.ToTable("Goals");
                 });
@@ -410,6 +395,42 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
                     b.HasIndex("ClientId");
 
                     b.ToTable("Incomes");
+                });
+
+            modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.Plan", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("InflationRatePct")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int?>("PrimaryClientId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SimulationCount")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PrimaryClientId");
+
+                    b.ToTable("Plans");
                 });
 
             modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.RiskQuestion", b =>
@@ -610,26 +631,37 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
                     b.Navigation("AssetClassB");
                 });
 
-            modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.Expense", b =>
+            modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.Client", b =>
                 {
-                    b.HasOne("GoalsPlanningSystem.Domain.Entities.Client", "Client")
-                        .WithMany("Expenses")
-                        .HasForeignKey("ClientId")
+                    b.HasOne("GoalsPlanningSystem.Domain.Entities.Plan", "Plan")
+                        .WithMany("Clients")
+                        .HasForeignKey("PlanId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Client");
+                    b.Navigation("Plan");
+                });
+
+            modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.Expense", b =>
+                {
+                    b.HasOne("GoalsPlanningSystem.Domain.Entities.Plan", "Plan")
+                        .WithMany("Expenses")
+                        .HasForeignKey("PlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Plan");
                 });
 
             modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.Goal", b =>
                 {
-                    b.HasOne("GoalsPlanningSystem.Domain.Entities.Client", "Client")
+                    b.HasOne("GoalsPlanningSystem.Domain.Entities.Plan", "Plan")
                         .WithMany("Goals")
-                        .HasForeignKey("ClientId")
+                        .HasForeignKey("PlanId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Client");
+                    b.Navigation("Plan");
                 });
 
             modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.GoalAccountLink", b =>
@@ -660,6 +692,16 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
                         .IsRequired();
 
                     b.Navigation("Client");
+                });
+
+            modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.Plan", b =>
+                {
+                    b.HasOne("GoalsPlanningSystem.Domain.Entities.Client", "PrimaryClient")
+                        .WithMany()
+                        .HasForeignKey("PrimaryClientId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("PrimaryClient");
                 });
 
             modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.RiskQuestionOption", b =>
@@ -716,10 +758,6 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
                 {
                     b.Navigation("Accounts");
 
-                    b.Navigation("Expenses");
-
-                    b.Navigation("Goals");
-
                     b.Navigation("Incomes");
 
                     b.Navigation("RiskQuestionnaireResponses");
@@ -728,6 +766,15 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.SqlServer
             modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.Goal", b =>
                 {
                     b.Navigation("AccountLinks");
+                });
+
+            modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.Plan", b =>
+                {
+                    b.Navigation("Clients");
+
+                    b.Navigation("Expenses");
+
+                    b.Navigation("Goals");
                 });
 
             modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.RiskQuestion", b =>

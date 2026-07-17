@@ -10,51 +10,15 @@ namespace GoalsPlanningSystem.Api.Controllers;
 [Route("api/clients")]
 public class ClientsController(GoalsPlanningSystemDbContext db) : ControllerBase
 {
-    private static int AgeOf(DateOnly dateOfBirth)
-    {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var age = today.Year - dateOfBirth.Year;
-        if (dateOfBirth > today.AddYears(-age)) age--;
-        return age;
-    }
-
-    private static ClientListItemDto ToListItemDto(Client c) => new(c.Id, c.Name, AgeOf(c.DateOfBirth), c.EffectiveRiskProfile);
-
     private static ClientDetailDto ToDetailDto(Client c) => new(
         c.Id, c.Name, c.DateOfBirth, c.RetirementAge, c.LifeExpectancyAge, c.TaxRegime, c.TotalDeductionsAmount,
         c.RiskScore, c.RiskProfile, c.RiskProfileOverride, c.Notes);
-
-    [HttpGet]
-    public async Task<ActionResult<List<ClientListItemDto>>> GetAll()
-    {
-        var clients = await db.Clients.AsNoTracking().ToListAsync();
-        return clients.Select(ToListItemDto).ToList();
-    }
 
     [HttpGet("{id:int}")]
     public async Task<ActionResult<ClientDetailDto>> GetById(int id)
     {
         var client = await db.Clients.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
         return client is null ? NotFound() : ToDetailDto(client);
-    }
-
-    [HttpPost]
-    public async Task<ActionResult<ClientDetailDto>> Create(ClientUpsertDto dto)
-    {
-        var client = new Client
-        {
-            Name = dto.Name,
-            DateOfBirth = dto.DateOfBirth,
-            RetirementAge = dto.RetirementAge,
-            LifeExpectancyAge = dto.LifeExpectancyAge,
-            TaxRegime = dto.TaxRegime,
-            TotalDeductionsAmount = dto.TotalDeductionsAmount,
-            RiskProfileOverride = dto.RiskProfileOverride,
-            Notes = dto.Notes
-        };
-        db.Clients.Add(client);
-        await db.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetById), new { id = client.Id }, ToDetailDto(client));
     }
 
     [HttpPut("{id:int}")]
@@ -83,8 +47,24 @@ public class ClientsController(GoalsPlanningSystemDbContext db) : ControllerBase
         var client = await db.Clients.FirstOrDefaultAsync(c => c.Id == id);
         if (client is null) return NotFound();
 
+        var plan = await db.Plans.Include(p => p.Clients).FirstAsync(p => p.Id == client.PlanId);
+
+        // Captured before Remove()/SaveChanges(): the PrimaryClientId -> Client relationship is configured
+        // SetNull, so EF nulls plan.PrimaryClientId in memory as part of saving the delete itself, before
+        // this method ever gets to check it.
+        var wasPrimary = plan.PrimaryClientId == id;
+
         db.Clients.Remove(client);
         await db.SaveChangesAsync();
+
+        if (wasPrimary)
+        {
+            var remaining = plan.Clients.FirstOrDefault(c => c.Id != id);
+            plan.PrimaryClientId = remaining?.Id;
+            plan.UpdatedAt = DateTime.UtcNow;
+            await db.SaveChangesAsync();
+        }
+
         return NoContent();
     }
 }

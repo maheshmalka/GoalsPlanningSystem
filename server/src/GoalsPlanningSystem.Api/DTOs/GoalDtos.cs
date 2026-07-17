@@ -4,7 +4,7 @@ namespace GoalsPlanningSystem.Api.DTOs;
 
 public record GoalDto(
     int Id,
-    int ClientId,
+    int PlanId,
     string Name,
     GoalType GoalType,
     decimal TargetAmount,

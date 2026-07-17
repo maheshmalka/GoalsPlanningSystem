@@ -5,8 +5,8 @@ namespace GoalsPlanningSystem.Domain.Entities;
 public class Goal
 {
     public int Id { get; set; }
-    public int ClientId { get; set; }
-    public Client Client { get; set; } = null!;
+    public int PlanId { get; set; }
+    public Plan Plan { get; set; } = null!;
 
     public string Name { get; set; } = string.Empty;
     public GoalType GoalType { get; set; }
@@ -16,9 +16,9 @@ public class Goal
     public int EndYear { get; set; }
     public bool IsRecurring { get; set; }
 
-    /// <summary>Null = use the global inflation rate.</summary>
+    /// <summary>Null = use the plan's inflation rate.</summary>
     public decimal? GrowthRateOverridePct { get; set; }
 
-    /// <summary>Optional earmarking; empty = funded from the general portfolio pool.</summary>
+    /// <summary>Optional earmarking against either client's accounts; empty = funded from the general portfolio pool.</summary>
     public List<GoalAccountLink> AccountLinks { get; set; } = [];
 }

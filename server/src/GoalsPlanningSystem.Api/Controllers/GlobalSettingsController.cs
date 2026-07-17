@@ -10,25 +10,6 @@ namespace GoalsPlanningSystem.Api.Controllers;
 [Route("api/global-settings")]
 public class GlobalSettingsController(GoalsPlanningSystemDbContext db) : ControllerBase
 {
-    [HttpGet]
-    public async Task<ActionResult<GlobalSettingsDto>> Get()
-    {
-        var settings = await db.GlobalSettings.AsNoTracking().FirstOrDefaultAsync();
-        return settings is null ? NotFound() : new GlobalSettingsDto(settings.InflationRatePct, settings.SimulationCount);
-    }
-
-    [HttpPut]
-    public async Task<ActionResult<GlobalSettingsDto>> Update(GlobalSettingsDto dto)
-    {
-        var settings = await db.GlobalSettings.FirstOrDefaultAsync();
-        if (settings is null) return NotFound();
-
-        settings.InflationRatePct = dto.InflationRatePct;
-        settings.SimulationCount = dto.SimulationCount;
-        await db.SaveChangesAsync();
-        return dto;
-    }
-
     [HttpGet("asset-classes")]
     public async Task<ActionResult<List<AssetClassDto>>> GetAssetClasses()
     {

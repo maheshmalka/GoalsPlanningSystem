@@ -125,12 +125,14 @@ export const goalSchema = z
 
 export type GoalFormValues = z.infer<typeof goalSchema>;
 
-export const globalSettingsSchema = z.object({
+export const planSchema = z.object({
+  name: z.string().trim().min(1, "Plan name is required").max(200, "Name is too long"),
   inflationRatePct: z.coerce.number().min(0, "Cannot be negative").max(30, "Enter a realistic rate"),
   simulationCount: z.coerce.number().int("Must be a whole number").min(100, "At least 100 for meaningful results").max(20000, "20,000 max for performance"),
+  primaryClientId: z.number().nullable(),
 });
 
-export type GlobalSettingsFormValues = z.infer<typeof globalSettingsSchema>;
+export type PlanFormValues = z.infer<typeof planSchema>;
 
 export const assetClassSchema = z.object({
   expectedAnnualReturnPct: z.coerce.number().min(-20, "Too low").max(40, "Too high"),

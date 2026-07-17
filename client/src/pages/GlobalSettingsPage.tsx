@@ -1,19 +1,17 @@
-import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
 import {
-  Alert, Box, Button, Card, CardContent, Grid, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography,
+  Box, Button, Card, CardContent, Grid, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography,
 } from "@mui/material";
 import {
-  useAssetClasses, useCapitalGainsRules, useCorrelations, useGlobalSettings, useTaxSettingsList, useTaxSlabs,
-  useUpdateAssetClass, useUpdateCapitalGainsRule, useUpdateCorrelation, useUpdateGlobalSettings, useUpdateTaxSettings,
-  useUpdateTaxSlab,
+  useAssetClasses, useCapitalGainsRules, useCorrelations, useTaxSettingsList, useTaxSlabs,
+  useUpdateAssetClass, useUpdateCapitalGainsRule, useUpdateCorrelation, useUpdateTaxSettings, useUpdateTaxSlab,
 } from "../api/queries";
 import { FormTextField } from "../components/FormTextField";
 import {
-  assetClassSchema, capitalGainsRuleSchema, correlationSchema, globalSettingsSchema, taxSettingsSchema, taxSlabSchema,
-  type AssetClassFormValues, type CapitalGainsRuleFormValues, type CorrelationFormValues, type GlobalSettingsFormValues,
+  assetClassSchema, capitalGainsRuleSchema, correlationSchema, taxSettingsSchema, taxSlabSchema,
+  type AssetClassFormValues, type CapitalGainsRuleFormValues, type CorrelationFormValues,
   type TaxSettingsFormValues, type TaxSlabFormValues,
 } from "../validation/schemas";
 import type { AssetClass, CapitalGainsRule, Correlation, TaxSettingsEntry, TaxSlab } from "../api/types";
@@ -148,17 +146,6 @@ function CapitalGainsRuleRow({ rule }: { rule: CapitalGainsRule }) {
 }
 
 export default function GlobalSettingsPage() {
-  const { data: settings } = useGlobalSettings();
-  const updateSettings = useUpdateGlobalSettings();
-  const { control, handleSubmit, reset, formState: { isDirty } } = useForm<z.input<typeof globalSettingsSchema>, any, GlobalSettingsFormValues>({
-    resolver: zodResolver(globalSettingsSchema),
-    defaultValues: { inflationRatePct: 7, simulationCount: 2000 },
-  });
-
-  useEffect(() => {
-    if (settings) reset(settings);
-  }, [settings, reset]);
-
   const { data: assetClasses } = useAssetClasses();
   const { data: correlations } = useCorrelations();
   const { data: taxSlabs } = useTaxSlabs();
@@ -166,25 +153,14 @@ export default function GlobalSettingsPage() {
   const { data: cgtRules } = useCapitalGainsRules();
 
   const nameFor = (id: number) => assetClasses?.find((a) => a.id === id)?.name ?? String(id);
-  const onSubmitGeneral = handleSubmit((values) => updateSettings.mutate(values));
 
   return (
     <Box>
-      <Typography variant="h4" mb={3}>Global Settings</Typography>
-
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>General</Typography>
-          <Stack direction="row" spacing={2} alignItems="flex-start">
-            <FormTextField name="inflationRatePct" control={control} label="Inflation Rate (%)" type="number" sx={{ width: 200 }} />
-            <FormTextField name="simulationCount" control={control} label="Monte Carlo Simulation Count" type="number" sx={{ width: 260 }} />
-            <Button variant="contained" disabled={!isDirty} onClick={onSubmitGeneral}>
-              Save
-            </Button>
-          </Stack>
-          {updateSettings.isSuccess && <Alert severity="success" sx={{ mt: 2 }}>Saved.</Alert>}
-        </CardContent>
-      </Card>
+      <Typography variant="h4" gutterBottom>Global Settings</Typography>
+      <Typography variant="body2" color="text.secondary" mb={3}>
+        Shared reference data used by every plan. Inflation rate and simulation count are set per-plan, on
+        each plan's Settings tab.
+      </Typography>
 
       <Card sx={{ mb: 3 }}>
         <CardContent>

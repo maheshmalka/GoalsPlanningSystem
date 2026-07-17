@@ -7,42 +7,42 @@ using Microsoft.EntityFrameworkCore;
 namespace GoalsPlanningSystem.Api.Controllers;
 
 [ApiController]
-[Route("api/clients/{clientId:int}/goals")]
+[Route("api/plans/{planId:int}/goals")]
 public class GoalsController(GoalsPlanningSystemDbContext db) : ControllerBase
 {
     private static GoalDto ToDto(Goal g) => new(
-        g.Id, g.ClientId, g.Name, g.GoalType, g.TargetAmount, g.Priority, g.StartYear, g.EndYear, g.IsRecurring,
+        g.Id, g.PlanId, g.Name, g.GoalType, g.TargetAmount, g.Priority, g.StartYear, g.EndYear, g.IsRecurring,
         g.GrowthRateOverridePct, g.AccountLinks.Select(l => l.AccountId).ToList());
 
     [HttpGet]
-    public async Task<ActionResult<List<GoalDto>>> GetAll(int clientId)
+    public async Task<ActionResult<List<GoalDto>>> GetAll(int planId)
     {
-        if (!await db.Clients.AnyAsync(c => c.Id == clientId)) return NotFound();
-        var goals = await db.Goals.AsNoTracking().Include(g => g.AccountLinks).Where(g => g.ClientId == clientId).ToListAsync();
+        if (!await db.Plans.AnyAsync(p => p.Id == planId)) return NotFound();
+        var goals = await db.Goals.AsNoTracking().Include(g => g.AccountLinks).Where(g => g.PlanId == planId).ToListAsync();
         return goals.Select(ToDto).ToList();
     }
 
     [HttpPost]
-    public async Task<ActionResult<GoalDto>> Create(int clientId, GoalUpsertDto dto)
+    public async Task<ActionResult<GoalDto>> Create(int planId, GoalUpsertDto dto)
     {
-        if (!await db.Clients.AnyAsync(c => c.Id == clientId)) return NotFound();
+        if (!await db.Plans.AnyAsync(p => p.Id == planId)) return NotFound();
 
         var goal = new Goal
         {
-            ClientId = clientId, Name = dto.Name, GoalType = dto.GoalType, TargetAmount = dto.TargetAmount,
+            PlanId = planId, Name = dto.Name, GoalType = dto.GoalType, TargetAmount = dto.TargetAmount,
             Priority = dto.Priority, StartYear = dto.StartYear, EndYear = dto.EndYear, IsRecurring = dto.IsRecurring,
             GrowthRateOverridePct = dto.GrowthRateOverridePct,
             AccountLinks = dto.LinkedAccountIds.Select(accId => new GoalAccountLink { AccountId = accId }).ToList()
         };
         db.Goals.Add(goal);
         await db.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetAll), new { clientId }, ToDto(goal));
+        return CreatedAtAction(nameof(GetAll), new { planId }, ToDto(goal));
     }
 
     [HttpPut("{id:int}")]
-    public async Task<ActionResult<GoalDto>> Update(int clientId, int id, GoalUpsertDto dto)
+    public async Task<ActionResult<GoalDto>> Update(int planId, int id, GoalUpsertDto dto)
     {
-        var goal = await db.Goals.Include(g => g.AccountLinks).FirstOrDefaultAsync(g => g.Id == id && g.ClientId == clientId);
+        var goal = await db.Goals.Include(g => g.AccountLinks).FirstOrDefaultAsync(g => g.Id == id && g.PlanId == planId);
         if (goal is null) return NotFound();
 
         goal.Name = dto.Name;
@@ -62,9 +62,9 @@ public class GoalsController(GoalsPlanningSystemDbContext db) : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
-    public async Task<IActionResult> Delete(int clientId, int id)
+    public async Task<IActionResult> Delete(int planId, int id)
     {
-        var goal = await db.Goals.FirstOrDefaultAsync(g => g.Id == id && g.ClientId == clientId);
+        var goal = await db.Goals.FirstOrDefaultAsync(g => g.Id == id && g.PlanId == planId);
         if (goal is null) return NotFound();
 
         db.Goals.Remove(goal);

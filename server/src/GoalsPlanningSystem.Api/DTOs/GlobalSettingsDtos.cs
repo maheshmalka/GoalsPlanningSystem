@@ -2,8 +2,6 @@ using GoalsPlanningSystem.Domain.Enums;
 
 namespace GoalsPlanningSystem.Api.DTOs;
 
-public record GlobalSettingsDto(decimal InflationRatePct, int SimulationCount);
-
 public record AssetClassDto(int Id, string Name, decimal ExpectedAnnualReturnPct, decimal AnnualVolatilityPct);
 
 public record AssetClassUpsertDto(decimal ExpectedAnnualReturnPct, decimal AnnualVolatilityPct);

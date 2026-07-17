@@ -201,6 +201,9 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.Sqlite
                     b.Property<string>("Notes")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("PlanId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("RetirementAge")
                         .HasColumnType("INTEGER");
 
@@ -225,6 +228,8 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.Sqlite
 
                     b.HasKey("Id");
 
+                    b.HasIndex("PlanId");
+
                     b.ToTable("Clients");
                 });
 
@@ -241,9 +246,6 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.Sqlite
                     b.Property<int>("Category")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("ClientId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<int?>("EndYear")
                         .HasColumnType("INTEGER");
 
@@ -255,41 +257,23 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.Sqlite
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("PlanId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("StartYear")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ClientId");
+                    b.HasIndex("PlanId");
 
                     b.ToTable("Expenses");
-                });
-
-            modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.GlobalSettings", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<decimal>("InflationRatePct")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("SimulationCount")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("GlobalSettings");
                 });
 
             modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.Goal", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("ClientId")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("EndYear")
@@ -310,6 +294,9 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.Sqlite
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("PlanId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("Priority")
                         .HasColumnType("INTEGER");
 
@@ -322,7 +309,7 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.Sqlite
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ClientId");
+                    b.HasIndex("PlanId");
 
                     b.ToTable("Goals");
                 });
@@ -383,6 +370,40 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.Sqlite
                     b.HasIndex("ClientId");
 
                     b.ToTable("Incomes");
+                });
+
+            modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.Plan", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("InflationRatePct")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("PrimaryClientId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("SimulationCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PrimaryClientId");
+
+                    b.ToTable("Plans");
                 });
 
             modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.RiskQuestion", b =>
@@ -573,26 +594,37 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.Sqlite
                     b.Navigation("AssetClassB");
                 });
 
-            modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.Expense", b =>
+            modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.Client", b =>
                 {
-                    b.HasOne("GoalsPlanningSystem.Domain.Entities.Client", "Client")
-                        .WithMany("Expenses")
-                        .HasForeignKey("ClientId")
+                    b.HasOne("GoalsPlanningSystem.Domain.Entities.Plan", "Plan")
+                        .WithMany("Clients")
+                        .HasForeignKey("PlanId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Client");
+                    b.Navigation("Plan");
+                });
+
+            modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.Expense", b =>
+                {
+                    b.HasOne("GoalsPlanningSystem.Domain.Entities.Plan", "Plan")
+                        .WithMany("Expenses")
+                        .HasForeignKey("PlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Plan");
                 });
 
             modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.Goal", b =>
                 {
-                    b.HasOne("GoalsPlanningSystem.Domain.Entities.Client", "Client")
+                    b.HasOne("GoalsPlanningSystem.Domain.Entities.Plan", "Plan")
                         .WithMany("Goals")
-                        .HasForeignKey("ClientId")
+                        .HasForeignKey("PlanId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Client");
+                    b.Navigation("Plan");
                 });
 
             modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.GoalAccountLink", b =>
@@ -623,6 +655,16 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.Sqlite
                         .IsRequired();
 
                     b.Navigation("Client");
+                });
+
+            modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.Plan", b =>
+                {
+                    b.HasOne("GoalsPlanningSystem.Domain.Entities.Client", "PrimaryClient")
+                        .WithMany()
+                        .HasForeignKey("PrimaryClientId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("PrimaryClient");
                 });
 
             modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.RiskQuestionOption", b =>
@@ -679,10 +721,6 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.Sqlite
                 {
                     b.Navigation("Accounts");
 
-                    b.Navigation("Expenses");
-
-                    b.Navigation("Goals");
-
                     b.Navigation("Incomes");
 
                     b.Navigation("RiskQuestionnaireResponses");
@@ -691,6 +729,15 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.Sqlite
             modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.Goal", b =>
                 {
                     b.Navigation("AccountLinks");
+                });
+
+            modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.Plan", b =>
+                {
+                    b.Navigation("Clients");
+
+                    b.Navigation("Expenses");
+
+                    b.Navigation("Goals");
                 });
 
             modelBuilder.Entity("GoalsPlanningSystem.Domain.Entities.RiskQuestion", b =>

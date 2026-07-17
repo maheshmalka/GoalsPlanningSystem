@@ -45,44 +45,6 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.Sqlite
                 });
 
             migrationBuilder.CreateTable(
-                name: "Clients",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    DateOfBirth = table.Column<DateOnly>(type: "TEXT", nullable: false),
-                    RetirementAge = table.Column<int>(type: "INTEGER", nullable: false),
-                    LifeExpectancyAge = table.Column<int>(type: "INTEGER", nullable: false),
-                    TaxRegime = table.Column<int>(type: "INTEGER", nullable: false),
-                    TotalDeductionsAmount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: false),
-                    RiskScore = table.Column<int>(type: "INTEGER", nullable: true),
-                    RiskProfile = table.Column<int>(type: "INTEGER", nullable: true),
-                    RiskProfileOverride = table.Column<int>(type: "INTEGER", nullable: true),
-                    Notes = table.Column<string>(type: "TEXT", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Clients", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "GlobalSettings",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    InflationRatePct = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: false),
-                    SimulationCount = table.Column<int>(type: "INTEGER", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_GlobalSettings", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "RiskQuestions",
                 columns: table => new
                 {
@@ -158,110 +120,6 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.Sqlite
                 });
 
             migrationBuilder.CreateTable(
-                name: "Accounts",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    ClientId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    AccountType = table.Column<int>(type: "INTEGER", nullable: false),
-                    CurrentBalance = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: false),
-                    ContributionAmount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: false),
-                    ContributionFrequency = table.Column<int>(type: "INTEGER", nullable: false),
-                    EmployerMatchPct = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: true),
-                    NpsAnnuitizationPct = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: true),
-                    AssumedAnnuityRatePct = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Accounts", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Accounts_Clients_ClientId",
-                        column: x => x.ClientId,
-                        principalTable: "Clients",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Expenses",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    ClientId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", nullable: false),
-                    Category = table.Column<int>(type: "INTEGER", nullable: false),
-                    AnnualAmount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: false),
-                    StartYear = table.Column<int>(type: "INTEGER", nullable: false),
-                    EndYear = table.Column<int>(type: "INTEGER", nullable: true),
-                    GrowthRateOverridePct = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Expenses", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Expenses_Clients_ClientId",
-                        column: x => x.ClientId,
-                        principalTable: "Clients",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Goals",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    ClientId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    GoalType = table.Column<int>(type: "INTEGER", nullable: false),
-                    TargetAmount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: false),
-                    Priority = table.Column<int>(type: "INTEGER", nullable: false),
-                    StartYear = table.Column<int>(type: "INTEGER", nullable: false),
-                    EndYear = table.Column<int>(type: "INTEGER", nullable: false),
-                    IsRecurring = table.Column<bool>(type: "INTEGER", nullable: false),
-                    GrowthRateOverridePct = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Goals", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Goals_Clients_ClientId",
-                        column: x => x.ClientId,
-                        principalTable: "Clients",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Incomes",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    ClientId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", nullable: false),
-                    IncomeType = table.Column<int>(type: "INTEGER", nullable: false),
-                    AnnualAmount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: false),
-                    StartYear = table.Column<int>(type: "INTEGER", nullable: false),
-                    EndYear = table.Column<int>(type: "INTEGER", nullable: true),
-                    AnnualGrowthRatePct = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Incomes", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Incomes_Clients_ClientId",
-                        column: x => x.ClientId,
-                        principalTable: "Clients",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "RiskQuestionOptions",
                 columns: table => new
                 {
@@ -297,12 +155,6 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.Sqlite
                 {
                     table.PrimaryKey("PK_AccountAllocations", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_AccountAllocations_Accounts_AccountId",
-                        column: x => x.AccountId,
-                        principalTable: "Accounts",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
                         name: "FK_AccountAllocations_AssetClasses_AssetClassId",
                         column: x => x.AssetClassId,
                         principalTable: "AssetClasses",
@@ -311,29 +163,98 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.Sqlite
                 });
 
             migrationBuilder.CreateTable(
-                name: "GoalAccountLinks",
+                name: "Accounts",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    GoalId = table.Column<int>(type: "INTEGER", nullable: false),
-                    AccountId = table.Column<int>(type: "INTEGER", nullable: false)
+                    ClientId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    AccountType = table.Column<int>(type: "INTEGER", nullable: false),
+                    CurrentBalance = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: false),
+                    ContributionAmount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: false),
+                    ContributionFrequency = table.Column<int>(type: "INTEGER", nullable: false),
+                    EmployerMatchPct = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: true),
+                    NpsAnnuitizationPct = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: true),
+                    AssumedAnnuityRatePct = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_GoalAccountLinks", x => x.Id);
+                    table.PrimaryKey("PK_Accounts", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Clients",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    PlanId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    DateOfBirth = table.Column<DateOnly>(type: "TEXT", nullable: false),
+                    RetirementAge = table.Column<int>(type: "INTEGER", nullable: false),
+                    LifeExpectancyAge = table.Column<int>(type: "INTEGER", nullable: false),
+                    TaxRegime = table.Column<int>(type: "INTEGER", nullable: false),
+                    TotalDeductionsAmount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: false),
+                    RiskScore = table.Column<int>(type: "INTEGER", nullable: true),
+                    RiskProfile = table.Column<int>(type: "INTEGER", nullable: true),
+                    RiskProfileOverride = table.Column<int>(type: "INTEGER", nullable: true),
+                    Notes = table.Column<string>(type: "TEXT", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Clients", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Incomes",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    ClientId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Name = table.Column<string>(type: "TEXT", nullable: false),
+                    IncomeType = table.Column<int>(type: "INTEGER", nullable: false),
+                    AnnualAmount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: false),
+                    StartYear = table.Column<int>(type: "INTEGER", nullable: false),
+                    EndYear = table.Column<int>(type: "INTEGER", nullable: true),
+                    AnnualGrowthRatePct = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Incomes", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_GoalAccountLinks_Accounts_AccountId",
-                        column: x => x.AccountId,
-                        principalTable: "Accounts",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_GoalAccountLinks_Goals_GoalId",
-                        column: x => x.GoalId,
-                        principalTable: "Goals",
+                        name: "FK_Incomes_Clients_ClientId",
+                        column: x => x.ClientId,
+                        principalTable: "Clients",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Plans",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    PrimaryClientId = table.Column<int>(type: "INTEGER", nullable: true),
+                    InflationRatePct = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: false),
+                    SimulationCount = table.Column<int>(type: "INTEGER", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Plans", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Plans_Clients_PrimaryClientId",
+                        column: x => x.PrimaryClientId,
+                        principalTable: "Clients",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
@@ -366,6 +287,84 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.Sqlite
                         name: "FK_RiskQuestionnaireResponses_RiskQuestions_RiskQuestionId",
                         column: x => x.RiskQuestionId,
                         principalTable: "RiskQuestions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Expenses",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    PlanId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Name = table.Column<string>(type: "TEXT", nullable: false),
+                    Category = table.Column<int>(type: "INTEGER", nullable: false),
+                    AnnualAmount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: false),
+                    StartYear = table.Column<int>(type: "INTEGER", nullable: false),
+                    EndYear = table.Column<int>(type: "INTEGER", nullable: true),
+                    GrowthRateOverridePct = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Expenses", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Expenses_Plans_PlanId",
+                        column: x => x.PlanId,
+                        principalTable: "Plans",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Goals",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    PlanId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    GoalType = table.Column<int>(type: "INTEGER", nullable: false),
+                    TargetAmount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: false),
+                    Priority = table.Column<int>(type: "INTEGER", nullable: false),
+                    StartYear = table.Column<int>(type: "INTEGER", nullable: false),
+                    EndYear = table.Column<int>(type: "INTEGER", nullable: false),
+                    IsRecurring = table.Column<bool>(type: "INTEGER", nullable: false),
+                    GrowthRateOverridePct = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Goals", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Goals_Plans_PlanId",
+                        column: x => x.PlanId,
+                        principalTable: "Plans",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "GoalAccountLinks",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    GoalId = table.Column<int>(type: "INTEGER", nullable: false),
+                    AccountId = table.Column<int>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_GoalAccountLinks", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_GoalAccountLinks_Accounts_AccountId",
+                        column: x => x.AccountId,
+                        principalTable: "Accounts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_GoalAccountLinks_Goals_GoalId",
+                        column: x => x.GoalId,
+                        principalTable: "Goals",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -410,9 +409,14 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.Sqlite
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Expenses_ClientId",
+                name: "IX_Clients_PlanId",
+                table: "Clients",
+                column: "PlanId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Expenses_PlanId",
                 table: "Expenses",
-                column: "ClientId");
+                column: "PlanId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_GoalAccountLinks_AccountId",
@@ -425,14 +429,19 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.Sqlite
                 column: "GoalId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Goals_ClientId",
+                name: "IX_Goals_PlanId",
                 table: "Goals",
-                column: "ClientId");
+                column: "PlanId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Incomes_ClientId",
                 table: "Incomes",
                 column: "ClientId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Plans_PrimaryClientId",
+                table: "Plans",
+                column: "PrimaryClientId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RiskQuestionnaireResponses_ClientId_RiskQuestionId",
@@ -466,11 +475,39 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.Sqlite
                 table: "TaxSlabs",
                 columns: new[] { "Regime", "SlabOrder" },
                 unique: true);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_AccountAllocations_Accounts_AccountId",
+                table: "AccountAllocations",
+                column: "AccountId",
+                principalTable: "Accounts",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Accounts_Clients_ClientId",
+                table: "Accounts",
+                column: "ClientId",
+                principalTable: "Clients",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Clients_Plans_PlanId",
+                table: "Clients",
+                column: "PlanId",
+                principalTable: "Plans",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropForeignKey(
+                name: "FK_Plans_Clients_PrimaryClientId",
+                table: "Plans");
+
             migrationBuilder.DropTable(
                 name: "AccountAllocations");
 
@@ -482,9 +519,6 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.Sqlite
 
             migrationBuilder.DropTable(
                 name: "Expenses");
-
-            migrationBuilder.DropTable(
-                name: "GlobalSettings");
 
             migrationBuilder.DropTable(
                 name: "GoalAccountLinks");
@@ -514,10 +548,13 @@ namespace GoalsPlanningSystem.Infrastructure.Migrations.Sqlite
                 name: "RiskQuestionOptions");
 
             migrationBuilder.DropTable(
+                name: "RiskQuestions");
+
+            migrationBuilder.DropTable(
                 name: "Clients");
 
             migrationBuilder.DropTable(
-                name: "RiskQuestions");
+                name: "Plans");
         }
     }
 }

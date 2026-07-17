@@ -5,6 +5,9 @@ namespace GoalsPlanningSystem.Domain.Entities;
 public class Client
 {
     public int Id { get; set; }
+    public int PlanId { get; set; }
+    public Plan Plan { get; set; } = null!;
+
     public string Name { get; set; } = string.Empty;
     public DateOnly DateOfBirth { get; set; }
     public int RetirementAge { get; set; } = 60;
@@ -26,8 +29,6 @@ public class Client
 
     public List<Account> Accounts { get; set; } = [];
     public List<Income> Incomes { get; set; } = [];
-    public List<Expense> Expenses { get; set; } = [];
-    public List<Goal> Goals { get; set; } = [];
     public List<RiskQuestionnaireResponse> RiskQuestionnaireResponses { get; set; } = [];
 
     public RiskProfile? EffectiveRiskProfile => RiskProfileOverride ?? RiskProfile;

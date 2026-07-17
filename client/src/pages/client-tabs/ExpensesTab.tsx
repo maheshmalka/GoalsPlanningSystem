@@ -21,8 +21,8 @@ const defaultValues: ExpenseFormValues = {
   name: "", category: "Essential", annualAmount: 0, startYear: new Date().getFullYear(), endYear: null, growthRateOverridePct: null,
 };
 
-export default function ExpensesTab({ clientId }: { clientId: number }) {
-  const { list, create, update, remove } = useExpenses(clientId);
+export default function ExpensesTab({ planId }: { planId: number }) {
+  const { list, create, update, remove } = useExpenses(planId);
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const { control, handleSubmit, reset } = useForm<z.input<typeof expenseSchema>, any, ExpenseFormValues>({

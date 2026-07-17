@@ -16,7 +16,7 @@ const drawerWidthExpanded = 248;
 const drawerWidthCollapsed = 72;
 
 const navItems = [
-  { label: "Clients", to: "/clients", icon: <PeopleAltIcon /> },
+  { label: "Plans", to: "/plans", icon: <PeopleAltIcon /> },
   { label: "Global Settings", to: "/settings", icon: <TuneIcon /> },
 ];
 
